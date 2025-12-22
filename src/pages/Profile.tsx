@@ -207,7 +207,7 @@ const Profile: React.FC = () => {
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
                 <Avatar
-                  src={user?.avatar ? `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/uploads/avatars/${user.avatar}` : undefined}
+                  src={user?.avatar ? `${process.env.REACT_APP_API_URL || 'https://tgeazxxujp.ap-south-1.awsapprunner.com/'}/uploads/avatars/${user.avatar}` : undefined}
                   sx={{ width: 100, height: 100, bgcolor: 'primary.main' }}
                 >
                   {user?.username?.charAt(0).toUpperCase()}
@@ -420,7 +420,7 @@ const Profile: React.FC = () => {
                   />
                 </Button>
 
-                {avatarPreview && avatarPreview !== (user?.avatar ? `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/uploads/avatars/${user.avatar}` : null) && (
+                {avatarPreview && avatarPreview !== (user?.avatar ? `${process.env.REACT_APP_API_URL || 'https://tgeazxxujp.ap-south-1.awsapprunner.com/'}/uploads/avatars/${user.avatar}` : null) && (
                   <Button
                     variant="outlined"
                     color="error"
