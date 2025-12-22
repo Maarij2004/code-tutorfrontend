@@ -95,7 +95,7 @@ const LandingPage: React.FC = () => {
 
   const handleGoogleLogin = () => {
     // Redirect to Google OAuth
-    const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+    const apiUrl = process.env.REACT_APP_API_URL || 'https://tgeazxxujp.ap-south-1.awsapprunner.com';
     window.location.href = `${apiUrl}/api/auth/google`;
   };
 
