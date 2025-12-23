@@ -16,7 +16,8 @@ import GameLearning from './pages/GameLearning';
 import Leaderboard from './pages/Leaderboard';
 import Profile from './pages/Profile';
 import Notes from './pages/Notes';
-
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 const theme = createTheme({
   palette: {
     mode: 'dark',
