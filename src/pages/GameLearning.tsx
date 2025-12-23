@@ -15,6 +15,7 @@ import {
   Chip,
   Alert,
   Snackbar,
+  TextField,
 } from '@mui/material';
 import {
   PlayArrow,
@@ -25,6 +26,7 @@ import {
   Language,
   School,
   Star,
+  Code,
 } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
@@ -80,6 +82,34 @@ const GameLearning: React.FC = () => {
     speed: 150 // milliseconds between moves
   });
 
+  // Maze game state
+  const [mazeGameState, setMazeGameState] = useState({
+    playerX: 1,
+    playerY: 1,
+    goalX: 8,
+    goalY: 8,
+    won: false,
+    maze: [
+      [1,1,1,1,1,1,1,1,1,1],
+      [1,0,0,0,1,0,0,0,0,1],
+      [1,0,1,0,1,0,1,1,0,1],
+      [1,0,1,0,0,0,0,1,0,1],
+      [1,0,1,1,1,1,0,1,0,1],
+      [1,0,0,0,0,0,0,1,0,1],
+      [1,1,1,0,1,1,1,1,0,1],
+      [1,0,0,0,0,0,0,0,0,1],
+      [1,0,1,1,1,1,1,1,0,1],
+      [1,1,1,1,1,1,1,1,1,1]
+    ] as number[][]
+  });
+
+  // Pixel Painter game state
+  const [pixelGameState, setPixelGameState] = useState({
+    grid: Array(16).fill(null).map(() => Array(16).fill(0)) as number[][],
+    currentColor: 1, // 1=red, 2=green, 3=blue, 4=yellow
+    colors: ['#000000', '#ff0000', '#00ff00', '#0000ff', '#ffff00']
+  });
+
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' | 'info' }>({
     open: false,
     message: '',
@@ -96,6 +126,8 @@ const GameLearning: React.FC = () => {
   const games = [
     { value: 'movement', label: 'Movement Game', description: 'Learn game development basics with player movement' },
     { value: 'snake', label: 'Snake Game', description: 'Classic Snake game with advanced programming concepts' },
+    { value: 'maze', label: 'Maze Explorer', description: 'Guide a robot through mazes using programming logic' },
+    { value: 'pixel', label: 'Pixel Painter', description: 'Draw patterns and pictures with code on a pixel grid' },
   ];
 
   // Comprehensive step-by-step tutorial data
@@ -730,6 +762,218 @@ const GameLearning: React.FC = () => {
     }
   ];
 
+  // Maze Explorer tutorial steps - Step by step game development
+  const mazeTutorialSteps = [
+    {
+      title: "Welcome to Maze Explorer!",
+      description: "We're going to build a maze navigation game step by step, learning programming concepts along the way.",
+      concept: "Introduction",
+      gameUpdate: { showMazeWelcome: true },
+      languageNotes: {
+        python: "We'll build a maze game using Python with pygame",
+        javascript: "We'll build a maze game using HTML5 Canvas and JavaScript",
+        cpp: "We'll build a maze game using SFML library for C++",
+        typescript: "We'll build a maze game using TypeScript with HTML5 Canvas"
+      } as Record<string, string>
+    },
+    {
+      title: "Setting up Variables",
+      description: "First, define variables for maze size, cell size, and player position.",
+      concept: "Variables & Data Types",
+      gameUpdate: { showMazeVariables: true },
+      languageNotes: {
+        python: "MAZE_WIDTH = 10\nMAZE_HEIGHT = 10\nCELL_SIZE = 40\nplayer_x = 0\nplayer_y = 0",
+        javascript: "const MAZE_WIDTH = 10;\nconst MAZE_HEIGHT = 10;\nconst CELL_SIZE = 40;\nlet playerX = 0;\nlet playerY = 0;",
+        cpp: "const int MAZE_WIDTH = 10;\nconst int MAZE_HEIGHT = 10;\nconst int CELL_SIZE = 40;\nint playerX = 0;\nint playerY = 0;",
+        typescript: "const MAZE_WIDTH: number = 10;\nconst MAZE_HEIGHT: number = 10;\nconst CELL_SIZE: number = 40;\nlet playerX: number = 0;\nlet playerY: number = 0;"
+      } as Record<string, string>
+    },
+    {
+      title: "Creating the Maze Grid",
+      description: "Create a 2D array to represent the maze walls and paths.",
+      concept: "Arrays & 2D Arrays",
+      gameUpdate: { showMazeGrid: true },
+      languageNotes: {
+        python: "maze = [\n    [1, 1, 1, 1, 1],\n    [1, 0, 0, 0, 1],\n    [1, 1, 1, 0, 1]\n]  # 1 = wall, 0 = path",
+        javascript: "const maze = [\n    [1, 1, 1, 1, 1],\n    [1, 0, 0, 0, 1],\n    [1, 1, 1, 0, 1]\n];  // 1 = wall, 0 = path",
+        cpp: "int maze[3][5] = {\n    {1, 1, 1, 1, 1},\n    {1, 0, 0, 0, 1},\n    {1, 1, 1, 0, 1}\n};  // 1 = wall, 0 = path",
+        typescript: "const maze: number[][] = [\n    [1, 1, 1, 1, 1],\n    [1, 0, 0, 0, 1],\n    [1, 1, 1, 0, 1]\n];  // 1 = wall, 0 = path"
+      } as Record<string, string>
+    },
+    {
+      title: "Drawing the Maze",
+      description: "Render the maze grid on screen, drawing walls and paths.",
+      concept: "Graphics & Rendering",
+      gameUpdate: { showMazeDrawing: true },
+      languageNotes: {
+        python: "for y in range(MAZE_HEIGHT):\n    for x in range(MAZE_WIDTH):\n        if maze[y][x] == 1:\n            pygame.draw.rect(screen, WALL_COLOR, (x*CELL_SIZE, y*CELL_SIZE, CELL_SIZE, CELL_SIZE))",
+        javascript: "for (let y = 0; y < MAZE_HEIGHT; y++) {\n    for (let x = 0; x < MAZE_WIDTH; x++) {\n        if (maze[y][x] === 1) {\n            ctx.fillRect(x*CELL_SIZE, y*CELL_SIZE, CELL_SIZE, CELL_SIZE);\n        }\n    }\n}",
+        cpp: "for (int y = 0; y < MAZE_HEIGHT; y++) {\n    for (int x = 0; x < MAZE_WIDTH; x++) {\n        if (maze[y][x] == 1) {\n            // Draw wall\n        }\n    }\n}",
+        typescript: "for (let y = 0; y < MAZE_HEIGHT; y++) {\n    for (let x = 0; x < MAZE_WIDTH; x++) {\n        if (maze[y][x] === 1) {\n            ctx.fillRect(x*CELL_SIZE, y*CELL_SIZE, CELL_SIZE, CELL_SIZE);\n        }\n    }\n}"
+      } as Record<string, string>
+    },
+    {
+      title: "Adding the Player",
+      description: "Add a player character that can move through the maze.",
+      concept: "Objects & Player Entity",
+      gameUpdate: { showMazePlayer: true },
+      languageNotes: {
+        python: "player = {\n    'x': 1,\n    'y': 1,\n    'color': (255, 0, 0)\n}\npygame.draw.circle(screen, player['color'], (player['x']*CELL_SIZE + CELL_SIZE//2, player['y']*CELL_SIZE + CELL_SIZE//2), 15)",
+        javascript: "const player = {x: 1, y: 1, color: '#ff0000'};\nctx.fillStyle = player.color;\nctx.beginPath();\nctx.arc(player.x*CELL_SIZE + CELL_SIZE/2, player.y*CELL_SIZE + CELL_SIZE/2, 15, 0, 2*Math.PI);\nctx.fill();",
+        cpp: "struct Player { int x, y; sf::Color color; };\nPlayer player = {1, 1, sf::Color::Red};",
+        typescript: "interface Player { x: number; y: number; color: string; }\nconst player: Player = {x: 1, y: 1, color: '#ff0000'};"
+      } as Record<string, string>
+    },
+    {
+      title: "Keyboard Input",
+      description: "Handle arrow key input to move the player.",
+      concept: "Input Handling",
+      gameUpdate: { showMazeInput: true },
+      languageNotes: {
+        python: "keys = pygame.key.get_pressed()\nif keys[pygame.K_UP]:\n    player['y'] -= 1\nif keys[pygame.K_DOWN]:\n    player['y'] += 1",
+        javascript: "document.addEventListener('keydown', (e) => {\n    if (e.key === 'ArrowUp') player.y -= 1;\n    if (e.key === 'ArrowDown') player.y += 1;\n});",
+        cpp: "if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) player.y -= 1;\nif (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) player.y += 1;",
+        typescript: "document.addEventListener('keydown', (e: KeyboardEvent) => {\n    if (e.key === 'ArrowUp') player.y -= 1;\n    if (e.key === 'ArrowDown') player.y += 1;\n});"
+      } as Record<string, string>
+    },
+    {
+      title: "Collision Detection",
+      description: "Check if the player can move (not hitting walls). Use arrow keys to move!",
+      concept: "Collision Detection",
+      gameUpdate: { enableMazeMovement: true },
+      languageNotes: {
+        python: "def can_move(new_x, new_y):\n    if maze[new_y][new_x] == 0:\n        return True\n    return False",
+        javascript: "function canMove(newX, newY) {\n    return maze[newY][newX] === 0;\n}",
+        cpp: "bool canMove(int newX, int newY) {\n    return maze[newY][newX] == 0;\n}",
+        typescript: "function canMove(newX: number, newY: number): boolean {\n    return maze[newY][newX] === 0;\n}"
+      } as Record<string, string>
+    },
+    {
+      title: "Goal Detection",
+      description: "Check if the player reached the goal. Try to reach the green exit!",
+      concept: "Conditional Logic",
+      gameUpdate: { enableMazeGoal: true },
+      languageNotes: {
+        python: "goal_x, goal_y = 8, 8\nif player['x'] == goal_x and player['y'] == goal_y:\n    print('You won!')",
+        javascript: "const goalX = 8, goalY = 8;\nif (player.x === goalX && player.y === goalY) {\n    console.log('You won!');\n}",
+        cpp: "int goalX = 8, goalY = 8;\nif (player.x == goalX && player.y == goalY) {\n    std::cout << \"You won!\" << std::endl;\n}",
+        typescript: "const goalX: number = 8, goalY: number = 8;\nif (player.x === goalX && player.y === goalY) {\n    console.log('You won!');\n}"
+      } as Record<string, string>
+    },
+    {
+      title: "Maze Explorer Complete!",
+      description: "Congratulations! You've built a complete maze navigation game. Use arrow keys to play!",
+      concept: "Project Complete",
+      gameUpdate: { mazeGamePlayable: true },
+      languageNotes: {
+        python: 'print("🎉 Maze Explorer Complete!")\nprint("Features:")\nprint("- Maze rendering")\nprint("- Player movement")\nprint("- Collision detection")\nprint("- Goal detection")',
+        javascript: 'console.log("🎉 Maze Explorer Complete!");\nconsole.log("Features:");\nconsole.log("- Maze rendering");\nconsole.log("- Player movement");\nconsole.log("- Collision detection");\nconsole.log("- Goal detection");',
+        cpp: 'std::cout << "🎉 Maze Explorer Complete!" << std::endl;\nstd::cout << "Features:" << std::endl;\nstd::cout << "- Maze rendering" << std::endl;\nstd::cout << "- Player movement" << std::endl;\nstd::cout << "- Collision detection" << std::endl;\nstd::cout << "- Goal detection" << std::endl;',
+        typescript: 'console.log("🎉 Maze Explorer Complete!");\nconsole.log("Features:");\nconsole.log("- Maze rendering");\nconsole.log("- Player movement");\nconsole.log("- Collision detection");\nconsole.log("- Goal detection");'
+      } as Record<string, string>
+    }
+  ];
+
+  // Pixel Painter tutorial steps - Step by step game development
+  const pixelTutorialSteps = [
+    {
+      title: "Welcome to Pixel Painter!",
+      description: "We're going to build an interactive pixel art drawing game step by step.",
+      concept: "Introduction",
+      gameUpdate: { showPixelWelcome: true },
+      languageNotes: {
+        python: "We'll build a pixel art game using Python with pygame",
+        javascript: "We'll build a pixel art game using HTML5 Canvas and JavaScript",
+        cpp: "We'll build a pixel art game using SFML library for C++",
+        typescript: "We'll build a pixel art game using TypeScript with HTML5 Canvas"
+      } as Record<string, string>
+    },
+    {
+      title: "Setting up the Canvas",
+      description: "Create a grid-based canvas for drawing pixels.",
+      concept: "Variables & Grid Setup",
+      gameUpdate: { showPixelCanvas: true },
+      languageNotes: {
+        python: "GRID_WIDTH = 16\nGRID_HEIGHT = 16\nCELL_SIZE = 30\ncanvas = [[0 for _ in range(GRID_WIDTH)] for _ in range(GRID_HEIGHT)]",
+        javascript: "const GRID_WIDTH = 16;\nconst GRID_HEIGHT = 16;\nconst CELL_SIZE = 30;\nconst canvas = Array(GRID_HEIGHT).fill(null).map(() => Array(GRID_WIDTH).fill(0));",
+        cpp: "const int GRID_WIDTH = 16;\nconst int GRID_HEIGHT = 16;\nconst int CELL_SIZE = 30;\nint canvas[GRID_HEIGHT][GRID_WIDTH] = {0};",
+        typescript: "const GRID_WIDTH: number = 16;\nconst GRID_HEIGHT: number = 16;\nconst CELL_SIZE: number = 30;\nconst canvas: number[][] = Array(GRID_HEIGHT).fill(null).map(() => Array(GRID_WIDTH).fill(0));"
+      } as Record<string, string>
+    },
+    {
+      title: "Drawing the Grid",
+      description: "Render the pixel grid on screen with borders.",
+      concept: "Graphics & Grid Rendering",
+      gameUpdate: { showPixelGrid: true },
+      languageNotes: {
+        python: "for y in range(GRID_HEIGHT):\n    for x in range(GRID_WIDTH):\n        pygame.draw.rect(screen, GRID_COLOR, (x*CELL_SIZE, y*CELL_SIZE, CELL_SIZE, CELL_SIZE), 1)",
+        javascript: "for (let y = 0; y < GRID_HEIGHT; y++) {\n    for (let x = 0; x < GRID_WIDTH; x++) {\n        ctx.strokeRect(x*CELL_SIZE, y*CELL_SIZE, CELL_SIZE, CELL_SIZE);\n    }\n}",
+        cpp: "for (int y = 0; y < GRID_HEIGHT; y++) {\n    for (int x = 0; x < GRID_WIDTH; x++) {\n        // Draw grid cell\n    }\n}",
+        typescript: "for (let y = 0; y < GRID_HEIGHT; y++) {\n    for (let x = 0; x < GRID_WIDTH; x++) {\n        ctx.strokeRect(x*CELL_SIZE, y*CELL_SIZE, CELL_SIZE, CELL_SIZE);\n    }\n}"
+      } as Record<string, string>
+    },
+    {
+      title: "Color Palette",
+      description: "Create a color palette for selecting drawing colors.",
+      concept: "Arrays & Color Management",
+      gameUpdate: { showPixelColors: true },
+      languageNotes: {
+        python: "colors = [(255,0,0), (0,255,0), (0,0,255), (255,255,0)]  # Red, Green, Blue, Yellow\ncurrent_color = colors[0]",
+        javascript: "const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00'];  // Red, Green, Blue, Yellow\nlet currentColor = colors[0];",
+        cpp: "sf::Color colors[] = {sf::Color::Red, sf::Color::Green, sf::Color::Blue, sf::Color::Yellow};\nsf::Color currentColor = colors[0];",
+        typescript: "const colors: string[] = ['#ff0000', '#00ff00', '#0000ff', '#ffff00'];\nlet currentColor: string = colors[0];"
+      } as Record<string, string>
+    },
+    {
+      title: "Mouse Input",
+      description: "Handle mouse clicks to draw pixels on the grid.",
+      concept: "Input Handling",
+      gameUpdate: { showPixelInput: true },
+      languageNotes: {
+        python: "mouse_x, mouse_y = pygame.mouse.get_pos()\ngrid_x = mouse_x // CELL_SIZE\ngrid_y = mouse_y // CELL_SIZE\ncanvas[grid_y][grid_x] = current_color",
+        javascript: "canvas.addEventListener('click', (e) => {\n    const x = Math.floor(e.offsetX / CELL_SIZE);\n    const y = Math.floor(e.offsetY / CELL_SIZE);\n    canvas[y][x] = currentColor;\n});",
+        cpp: "if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {\n    sf::Vector2i mousePos = sf::Mouse::getPosition(window);\n    int gridX = mousePos.x / CELL_SIZE;\n    int gridY = mousePos.y / CELL_SIZE;\n    canvas[gridY][gridX] = currentColor;\n}",
+        typescript: "canvas.addEventListener('click', (e: MouseEvent) => {\n    const x = Math.floor(e.offsetX / CELL_SIZE);\n    const y = Math.floor(e.offsetY / CELL_SIZE);\n    canvas[y][x] = currentColor;\n});"
+      } as Record<string, string>
+    },
+    {
+      title: "Drawing Pixels",
+      description: "Render filled pixels based on canvas data. Click to draw!",
+      concept: "Rendering & State",
+      gameUpdate: { enablePixelDrawing: true },
+      languageNotes: {
+        python: "for y in range(GRID_HEIGHT):\n    for x in range(GRID_WIDTH):\n        if canvas[y][x] != 0:\n            pygame.draw.rect(screen, canvas[y][x], (x*CELL_SIZE, y*CELL_SIZE, CELL_SIZE, CELL_SIZE))",
+        javascript: "for (let y = 0; y < GRID_HEIGHT; y++) {\n    for (let x = 0; x < GRID_WIDTH; x++) {\n        if (canvas[y][x] !== 0) {\n            ctx.fillStyle = canvas[y][x];\n            ctx.fillRect(x*CELL_SIZE, y*CELL_SIZE, CELL_SIZE, CELL_SIZE);\n        }\n    }\n}",
+        cpp: "for (int y = 0; y < GRID_HEIGHT; y++) {\n    for (int x = 0; x < GRID_WIDTH; x++) {\n        if (canvas[y][x] != 0) {\n            // Draw filled pixel\n        }\n    }\n}",
+        typescript: "for (let y = 0; y < GRID_HEIGHT; y++) {\n    for (let x = 0; x < GRID_WIDTH; x++) {\n        if (canvas[y][x] !== 0) {\n            ctx.fillStyle = canvas[y][x];\n            ctx.fillRect(x*CELL_SIZE, y*CELL_SIZE, CELL_SIZE, CELL_SIZE);\n        }\n    }\n}"
+      } as Record<string, string>
+    },
+    {
+      title: "Color Selection",
+      description: "Add ability to switch colors. Press 1-4 keys to change colors!",
+      concept: "Keyboard Input & State",
+      gameUpdate: { enablePixelColorSwitch: true },
+      languageNotes: {
+        python: "keys = pygame.key.get_pressed()\nif keys[pygame.K_1]: current_color = colors[0]\nif keys[pygame.K_2]: current_color = colors[1]",
+        javascript: "document.addEventListener('keydown', (e) => {\n    if (e.key === '1') currentColor = colors[0];\n    if (e.key === '2') currentColor = colors[1];\n});",
+        cpp: "if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num1)) currentColor = colors[0];\nif (sf::Keyboard::isKeyPressed(sf::Keyboard::Num2)) currentColor = colors[1];",
+        typescript: "document.addEventListener('keydown', (e: KeyboardEvent) => {\n    if (e.key === '1') currentColor = colors[0];\n    if (e.key === '2') currentColor = colors[1];\n});"
+      } as Record<string, string>
+    },
+    {
+      title: "Pixel Painter Complete!",
+      description: "Congratulations! You've built a complete pixel art drawing game. Click to draw, use 1-4 keys for colors!",
+      concept: "Project Complete",
+      gameUpdate: { pixelGamePlayable: true },
+      languageNotes: {
+        python: 'print("🎉 Pixel Painter Complete!")\nprint("Features:")\nprint("- Grid rendering")\nprint("- Mouse input")\nprint("- Color selection")\nprint("- Pixel drawing")',
+        javascript: 'console.log("🎉 Pixel Painter Complete!");\nconsole.log("Features:");\nconsole.log("- Grid rendering");\nconsole.log("- Mouse input");\nconsole.log("- Color selection");\nconsole.log("- Pixel drawing");',
+        cpp: 'std::cout << "🎉 Pixel Painter Complete!" << std::endl;\nstd::cout << "Features:" << std::endl;\nstd::cout << "- Grid rendering" << std::endl;\nstd::cout << "- Mouse input" << std::endl;\nstd::cout << "- Color selection" << std::endl;\nstd::cout << "- Pixel drawing" << std::endl;',
+        typescript: 'console.log("🎉 Pixel Painter Complete!");\nconsole.log("Features:");\nconsole.log("- Grid rendering");\nconsole.log("- Mouse input");\nconsole.log("- Color selection");\nconsole.log("- Pixel drawing");'
+      } as Record<string, string>
+    }
+  ];
+
   // Initialize game state on language or game change
   useEffect(() => {
     setCurrentStep(0);
@@ -948,9 +1192,10 @@ const GameLearning: React.FC = () => {
   // Handle keyboard input
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Enable keyboard for movement game (steps 7-12) or snake game (all steps when snake is selected)
+      // Enable keyboard for movement game (steps 7-12), snake game (all steps), or maze game (steps 6-8)
       const enableKeyboard = (selectedGame === 'movement' && currentStep >= 7 && currentStep <= 12) ||
-                            (selectedGame === 'snake');
+                            (selectedGame === 'snake') ||
+                            (selectedGame === 'maze' && currentStep >= 6 && currentStep <= 8);
 
       if (enableKeyboard) {
         if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
@@ -974,9 +1219,10 @@ const GameLearning: React.FC = () => {
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
-      // Enable keyboard for movement game (steps 7-12) or snake game (all steps when snake is selected)
+      // Enable keyboard for movement game (steps 7-12), snake game (all steps), or maze game (steps 6-8)
       const enableKeyboard = (selectedGame === 'movement' && currentStep >= 7 && currentStep <= 12) ||
-                            (selectedGame === 'snake');
+                            (selectedGame === 'snake') ||
+                            (selectedGame === 'maze' && currentStep >= 6 && currentStep <= 8);
 
       if (enableKeyboard && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
         console.log('Key released:', e.code);
@@ -994,8 +1240,62 @@ const GameLearning: React.FC = () => {
     };
   }, [currentStep, selectedGame, snakeGameState.gameOver]);
 
+  // Handle maze game movement
+  React.useEffect(() => {
+    if (selectedGame === 'maze' && currentStep >= 6 && currentStep <= 8) {
+      const moveSpeed = 1;
+      const interval = setInterval(() => {
+        setMazeGameState(prev => {
+          if (prev.won) return prev;
+          
+          let newX = prev.playerX;
+          let newY = prev.playerY;
+          
+          if (keys['ArrowLeft']) newX -= moveSpeed;
+          if (keys['ArrowRight']) newX += moveSpeed;
+          if (keys['ArrowUp']) newY -= moveSpeed;
+          if (keys['ArrowDown']) newY += moveSpeed;
+          
+          // Collision detection
+          if (newX >= 0 && newX < prev.maze[0].length && 
+              newY >= 0 && newY < prev.maze.length &&
+              prev.maze[newY][newX] === 0) {
+            const won = (newX === prev.goalX && newY === prev.goalY);
+            return { ...prev, playerX: newX, playerY: newY, won };
+          }
+          
+          return prev;
+        });
+      }, 100);
+      
+      return () => clearInterval(interval);
+    }
+  }, [keys, currentStep, selectedGame]);
+
+  // Handle pixel game color switching
+  React.useEffect(() => {
+    if (selectedGame === 'pixel' && currentStep >= 6) {
+      const handleKeyPress = (e: KeyboardEvent) => {
+        if (e.key >= '1' && e.key <= '4') {
+          setPixelGameState(prev => ({
+            ...prev,
+            currentColor: parseInt(e.key)
+          }));
+        }
+      };
+      
+      document.addEventListener('keydown', handleKeyPress);
+      return () => document.removeEventListener('keydown', handleKeyPress);
+    }
+  }, [currentStep, selectedGame]);
+
   const generateGamePreview = (stepIndex: number) => {
-    const currentTutorialSteps = selectedGame === 'movement' ? tutorialSteps : snakeTutorialSteps;
+    const currentTutorialSteps = 
+      selectedGame === 'movement' ? tutorialSteps :
+      selectedGame === 'snake' ? snakeTutorialSteps :
+      selectedGame === 'maze' ? mazeTutorialSteps :
+      selectedGame === 'pixel' ? pixelTutorialSteps :
+      tutorialSteps;
     const step = currentTutorialSteps[stepIndex];
     if (!step) return;
 
@@ -1037,6 +1337,35 @@ const GameLearning: React.FC = () => {
       // Reset collected items for new game types
       if (selectedGame === 'movement' && nextStep < 13) {
         setCollectedItems([false, false]);
+      }
+
+      // Reset maze and pixel game states for new steps
+      if (selectedGame === 'maze') {
+        setMazeGameState({
+          playerX: 1,
+          playerY: 1,
+          goalX: 8,
+          goalY: 8,
+          won: false,
+          maze: [
+            [1,1,1,1,1,1,1,1,1,1],
+            [1,0,0,0,1,0,0,0,0,1],
+            [1,0,1,0,1,0,1,1,0,1],
+            [1,0,1,0,0,0,0,1,0,1],
+            [1,0,1,1,1,1,0,1,0,1],
+            [1,0,0,0,0,0,0,1,0,1],
+            [1,1,1,0,1,1,1,1,0,1],
+            [1,0,0,0,0,0,0,0,0,1],
+            [1,0,1,1,1,1,1,1,0,1],
+            [1,1,1,1,1,1,1,1,1,1]
+          ]
+        });
+      } else if (selectedGame === 'pixel') {
+        setPixelGameState({
+          grid: Array(16).fill(null).map(() => Array(16).fill(0)),
+          currentColor: 1,
+          colors: ['#000000', '#ff0000', '#00ff00', '#0000ff', '#ffff00']
+        });
       }
 
       generateGamePreview(nextStep);
@@ -1081,12 +1410,12 @@ const GameLearning: React.FC = () => {
     try {
       // Award XP for completing the tutorial
       await axios.post('/api/user/xp', {
-        xpGained: selectedGame === 'snake' ? 150 : 100 // More XP for snake game
+        xpGained: selectedGame === 'snake' ? 150 : selectedGame === 'maze' || selectedGame === 'pixel' ? 80 : 100
       });
 
       setSnackbar({
         open: true,
-        message: `${games.find(g => g.value === selectedGame)?.label} completed! +${selectedGame === 'snake' ? 150 : 100} XP awarded!`,
+        message: `${games.find(g => g.value === selectedGame)?.label} completed! +${selectedGame === 'snake' ? 150 : selectedGame === 'maze' || selectedGame === 'pixel' ? 80 : 100} XP awarded!`,
         severity: 'success'
       });
     } catch (error) {
@@ -1099,7 +1428,12 @@ const GameLearning: React.FC = () => {
   };
 
   // Select the appropriate tutorial based on game selection
-  const currentTutorialSteps = selectedGame === 'movement' ? tutorialSteps : snakeTutorialSteps;
+  const currentTutorialSteps = 
+    selectedGame === 'movement' ? tutorialSteps :
+    selectedGame === 'snake' ? snakeTutorialSteps :
+    selectedGame === 'maze' ? mazeTutorialSteps :
+    selectedGame === 'pixel' ? pixelTutorialSteps :
+    tutorialSteps;
   const currentTutorialStep = currentTutorialSteps[currentStep];
 
   return (
@@ -1146,13 +1480,46 @@ const GameLearning: React.FC = () => {
               setPlayerPos({ x: 350, y: 200 });
               setCollectedItems([false, false]);
               // Regenerate preview for new game
-              const newTutorialSteps = e.target.value === 'movement' ? tutorialSteps : snakeTutorialSteps;
+              const newTutorialSteps = 
+                e.target.value === 'movement' ? tutorialSteps :
+                e.target.value === 'snake' ? snakeTutorialSteps :
+                e.target.value === 'maze' ? mazeTutorialSteps :
+                e.target.value === 'pixel' ? pixelTutorialSteps :
+                tutorialSteps;
               if (newTutorialSteps[0]) {
-                const cumulativeState: any = { currentStep: 0, language: selectedLanguage };
+                const cumulativeState: any = { currentStep: 0, language: selectedLanguage, gameType: e.target.value };
                 for (let i = 0; i <= 0; i++) {
                   Object.assign(cumulativeState, newTutorialSteps[i].gameUpdate);
                 }
                 setGameState(cumulativeState);
+              }
+              // Reset game-specific states
+              if (e.target.value === 'maze') {
+                setMazeGameState({
+                  playerX: 1,
+                  playerY: 1,
+                  goalX: 8,
+                  goalY: 8,
+                  won: false,
+                  maze: [
+                    [1,1,1,1,1,1,1,1,1,1],
+                    [1,0,0,0,1,0,0,0,0,1],
+                    [1,0,1,0,1,0,1,1,0,1],
+                    [1,0,1,0,0,0,0,1,0,1],
+                    [1,0,1,1,1,1,0,1,0,1],
+                    [1,0,0,0,0,0,0,1,0,1],
+                    [1,1,1,0,1,1,1,1,0,1],
+                    [1,0,0,0,0,0,0,0,0,1],
+                    [1,0,1,1,1,1,1,1,0,1],
+                    [1,1,1,1,1,1,1,1,1,1]
+                  ]
+                });
+              } else if (e.target.value === 'pixel') {
+                setPixelGameState({
+                  grid: Array(16).fill(null).map(() => Array(16).fill(0)),
+                  currentColor: 1,
+                  colors: ['#000000', '#ff0000', '#00ff00', '#0000ff', '#ffff00']
+                });
               }
             }}
             label="Game Tutorial"
@@ -1175,7 +1542,7 @@ const GameLearning: React.FC = () => {
       <Box sx={{ mb: 3 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
           <Typography variant="h6">
-            Step {currentStep + 1} of {tutorialSteps.length}
+            Step {currentStep + 1} of {currentTutorialSteps.length}
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Star color="primary" />
@@ -1256,7 +1623,7 @@ const GameLearning: React.FC = () => {
                 </Button>
 
                 <Typography variant="body2" color="text.secondary">
-                  {currentStep + 1} / {tutorialSteps.length}
+                  {currentStep + 1} / {currentTutorialSteps.length}
                 </Typography>
 
                 {currentStep === tutorialSteps.length - 1 ? (
@@ -1316,6 +1683,10 @@ const GameLearning: React.FC = () => {
                 collectedItems={collectedItems}
                 animationTime={animationTime}
                 snakeGameState={snakeGameState}
+                mazeGameState={mazeGameState}
+                pixelGameState={pixelGameState}
+                setMazeGameState={setMazeGameState}
+                setPixelGameState={setPixelGameState}
               />
 
             </Box>
@@ -2310,6 +2681,253 @@ const renderSnakeGame = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElemen
   }
 };
 
+// Maze Explorer Rendering Function - Step by step tutorial
+const renderMazeGame = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, currentStep: number, mazeState: any) => {
+  ctx.fillStyle = '#0a0a0a';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const cellSize = 35;
+  const offsetX = (canvas.width - mazeState.maze[0].length * cellSize) / 2;
+  const offsetY = 50;
+
+  switch (currentStep) {
+    case 0: // Welcome
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 24px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('🎮 Maze Explorer', canvas.width / 2, canvas.height / 2 - 20);
+      ctx.font = '16px Arial';
+      ctx.fillText('Building step by step...', canvas.width / 2, canvas.height / 2 + 20);
+      break;
+
+    case 1: // Variables
+      ctx.fillStyle = '#90caf9';
+      ctx.font = '16px monospace';
+      ctx.textAlign = 'left';
+      const variables = ['MAZE_WIDTH = 10', 'MAZE_HEIGHT = 10', 'CELL_SIZE = 40', 'player_x = 0', 'player_y = 0'];
+      variables.forEach((v, i) => {
+        ctx.fillText(v, 50, 80 + i * 30);
+      });
+      break;
+
+    case 2: // Maze Grid
+      // Draw simple grid preview
+      for (let y = 0; y < 5; y++) {
+        for (let x = 0; x < 5; x++) {
+          ctx.fillStyle = (x + y) % 2 === 0 ? '#1a1a1a' : '#2a2a2a';
+          ctx.fillRect(200 + x * 40, 150 + y * 40, 40, 40);
+          ctx.strokeStyle = '#444444';
+          ctx.strokeRect(200 + x * 40, 150 + y * 40, 40, 40);
+        }
+      }
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '14px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('2D Array: maze[y][x]', canvas.width / 2, canvas.height - 50);
+      break;
+
+    case 3: // Drawing Maze
+    case 4: // Adding Player
+    case 5: // Keyboard Input
+    case 6: // Collision Detection
+    case 7: // Goal Detection
+      // Draw the actual maze
+      for (let y = 0; y < mazeState.maze.length; y++) {
+        for (let x = 0; x < mazeState.maze[y].length; x++) {
+          const px = offsetX + x * cellSize;
+          const py = offsetY + y * cellSize;
+          
+          if (mazeState.maze[y][x] === 1) {
+            ctx.fillStyle = '#333333';
+            ctx.fillRect(px, py, cellSize, cellSize);
+          } else {
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(px, py, cellSize, cellSize);
+            ctx.strokeStyle = '#444444';
+            ctx.strokeRect(px, py, cellSize, cellSize);
+          }
+        }
+      }
+
+      // Draw goal
+      if (currentStep >= 7) {
+        ctx.fillStyle = '#4caf50';
+        ctx.beginPath();
+        ctx.arc(offsetX + mazeState.goalX * cellSize + cellSize/2, offsetY + mazeState.goalY * cellSize + cellSize/2, cellSize/2 - 2, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+
+      // Draw player
+      if (currentStep >= 4) {
+        ctx.fillStyle = '#ff5722';
+        ctx.beginPath();
+        ctx.arc(offsetX + mazeState.playerX * cellSize + cellSize/2, offsetY + mazeState.playerY * cellSize + cellSize/2, cellSize/3, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+
+      // Show win message
+      if (mazeState.won && currentStep >= 7) {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#4caf50';
+        ctx.font = 'bold 32px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('🎉 You Won!', canvas.width / 2, canvas.height / 2);
+      }
+
+      // Instructions
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '14px Arial';
+      ctx.textAlign = 'center';
+      if (currentStep >= 6 && currentStep < 8) {
+        ctx.fillText('Use arrow keys to move!', canvas.width / 2, canvas.height - 30);
+      }
+      break;
+
+    case 8: // Complete
+      ctx.fillStyle = '#4caf50';
+      ctx.font = 'bold 28px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('🎉 MAZE EXPLORER COMPLETE!', canvas.width / 2, canvas.height / 2 - 30);
+      ctx.font = '16px Arial';
+      ctx.fillText('Use arrow keys to play!', canvas.width / 2, canvas.height / 2 + 20);
+      break;
+  }
+};
+
+// Pixel Painter Rendering Function - Step by step tutorial
+const renderPixelGame = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, currentStep: number, pixelState: any, setPixelGameState?: React.Dispatch<React.SetStateAction<any>>) => {
+  ctx.fillStyle = '#0a0a0a';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const gridSize = pixelState.grid.length;
+  const cellSize = Math.min(400 / gridSize, 25);
+  const offsetX = (canvas.width - gridSize * cellSize) / 2;
+  const offsetY = 50;
+
+  switch (currentStep) {
+    case 0: // Welcome
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 24px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('🎨 Pixel Painter', canvas.width / 2, canvas.height / 2 - 20);
+      ctx.font = '16px Arial';
+      ctx.fillText('Building step by step...', canvas.width / 2, canvas.height / 2 + 20);
+      break;
+
+    case 1: // Canvas Setup
+      ctx.fillStyle = '#90caf9';
+      ctx.font = '16px monospace';
+      ctx.textAlign = 'left';
+      const vars = ['GRID_WIDTH = 16', 'GRID_HEIGHT = 16', 'CELL_SIZE = 30', 'canvas = Array(16).fill(Array(16).fill(0))'];
+      vars.forEach((v, i) => {
+        ctx.fillText(v, 50, 80 + i * 30);
+      });
+      break;
+
+    case 2: // Drawing Grid
+    case 3: // Color Palette
+    case 4: // Mouse Input
+    case 5: // Drawing Pixels
+    case 6: // Color Selection
+      // Draw the grid
+      for (let i = 0; i < gridSize; i++) {
+        for (let j = 0; j < gridSize; j++) {
+          const x = offsetX + j * cellSize;
+          const y = offsetY + i * cellSize;
+
+          if (pixelState.grid[i][j] !== 0) {
+            ctx.fillStyle = pixelState.colors[pixelState.grid[i][j]] || '#2196f3';
+            ctx.fillRect(x, y, cellSize, cellSize);
+          } else {
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(x, y, cellSize, cellSize);
+          }
+
+          ctx.strokeStyle = '#444444';
+          ctx.strokeRect(x, y, cellSize, cellSize);
+        }
+      }
+
+      // Draw color palette
+      if (currentStep >= 3) {
+        const paletteY = offsetY + gridSize * cellSize + 20;
+        const paletteX = offsetX;
+        const paletteCellSize = 30;
+        
+        for (let i = 0; i < 4; i++) {
+          const px = paletteX + i * (paletteCellSize + 5);
+          ctx.fillStyle = pixelState.colors[i + 1];
+          ctx.fillRect(px, paletteY, paletteCellSize, paletteCellSize);
+          ctx.strokeStyle = pixelState.currentColor === i + 1 ? '#ffffff' : '#666666';
+          ctx.lineWidth = pixelState.currentColor === i + 1 ? 3 : 1;
+          ctx.strokeRect(px, paletteY, paletteCellSize, paletteCellSize);
+        }
+        
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'left';
+        ctx.fillText('Press 1-4 to change color', paletteX, paletteY + paletteCellSize + 20);
+      }
+
+      // Instructions
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '14px Arial';
+      ctx.textAlign = 'center';
+      if (currentStep >= 5 && currentStep < 7) {
+        ctx.fillText('Click on the grid to draw!', canvas.width / 2, canvas.height - 30);
+      }
+      break;
+
+    case 7: // Complete
+      // Draw playable game
+      for (let i = 0; i < gridSize; i++) {
+        for (let j = 0; j < gridSize; j++) {
+          const x = offsetX + j * cellSize;
+          const y = offsetY + i * cellSize;
+
+          if (pixelState.grid[i][j] !== 0) {
+            ctx.fillStyle = pixelState.colors[pixelState.grid[i][j]] || '#2196f3';
+            ctx.fillRect(x, y, cellSize, cellSize);
+          } else {
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(x, y, cellSize, cellSize);
+          }
+
+          ctx.strokeStyle = '#444444';
+          ctx.strokeRect(x, y, cellSize, cellSize);
+        }
+      }
+
+      // Color palette
+      const paletteY = offsetY + gridSize * cellSize + 20;
+      const paletteX = offsetX;
+      const paletteCellSize = 30;
+      
+      for (let i = 0; i < 4; i++) {
+        const px = paletteX + i * (paletteCellSize + 5);
+        ctx.fillStyle = pixelState.colors[i + 1];
+        ctx.fillRect(px, paletteY, paletteCellSize, paletteCellSize);
+        ctx.strokeStyle = pixelState.currentColor === i + 1 ? '#ffffff' : '#666666';
+        ctx.lineWidth = pixelState.currentColor === i + 1 ? 3 : 1;
+        ctx.strokeRect(px, paletteY, paletteCellSize, paletteCellSize);
+      }
+      
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '12px Arial';
+      ctx.textAlign = 'left';
+      ctx.fillText('Press 1-4 to change color', paletteX, paletteY + paletteCellSize + 20);
+
+      ctx.fillStyle = '#4caf50';
+      ctx.font = 'bold 20px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('🎉 PIXEL PAINTER COMPLETE!', canvas.width / 2, canvas.height - 50);
+      ctx.font = '14px Arial';
+      ctx.fillText('Click to draw! Use 1-4 keys for colors!', canvas.width / 2, canvas.height - 25);
+      break;
+  }
+};
+
 // Game Canvas Component
 const GameCanvas: React.FC<{
   gameState: any;
@@ -2320,7 +2938,11 @@ const GameCanvas: React.FC<{
   collectedItems?: boolean[];
   animationTime?: number;
   snakeGameState?: any;
-}> = ({ gameState, keys: externalKeys, setKeys: externalSetKeys, playerPos: externalPlayerPos, setPlayerPos: externalSetPlayerPos, collectedItems = [false, false], animationTime = 0, snakeGameState }) => {
+  mazeGameState?: any;
+  pixelGameState?: any;
+  setMazeGameState?: React.Dispatch<React.SetStateAction<any>>;
+  setPixelGameState?: React.Dispatch<React.SetStateAction<any>>;
+}> = ({ gameState, keys: externalKeys, setKeys: externalSetKeys, playerPos: externalPlayerPos, setPlayerPos: externalSetPlayerPos, collectedItems = [false, false], animationTime = 0, snakeGameState, mazeGameState, pixelGameState, setMazeGameState, setPixelGameState }) => {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const [internalKeys, setInternalKeys] = React.useState<{[key: string]: boolean}>({});
   const [internalPlayerPos, setInternalPlayerPos] = React.useState({ x: 350, y: 200 });
@@ -2349,6 +2971,48 @@ const GameCanvas: React.FC<{
   // Render different content based on game type
   if (gameType === 'snake') {
     renderSnakeGame(ctx, canvas, currentStep, animationTime, snakeGameState);
+    return;
+  }
+
+  if (gameType === 'maze' && mazeGameState) {
+    renderMazeGame(ctx, canvas, currentStep, mazeGameState);
+    return;
+  }
+
+  if (gameType === 'pixel' && pixelGameState) {
+    renderPixelGame(ctx, canvas, currentStep, pixelGameState, setPixelGameState);
+    
+    // Add mouse click handler for pixel drawing
+    if (currentStep >= 5 && currentStep <= 7) {
+      const handleClick = (e: MouseEvent) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        
+        const cellSize = Math.min(400 / pixelGameState.grid.length, 25);
+        const offsetX = (canvas.width - pixelGameState.grid.length * cellSize) / 2;
+        const offsetY = 50;
+        
+        const gridX = Math.floor((x - offsetX) / cellSize);
+        const gridY = Math.floor((y - offsetY) / cellSize);
+        
+        if (gridX >= 0 && gridX < pixelGameState.grid.length &&
+            gridY >= 0 && gridY < pixelGameState.grid.length &&
+            setPixelGameState) {
+          setPixelGameState((prev: any) => {
+            const newGrid = prev.grid.map((row: number[], i: number) => 
+              row.map((cell: number, j: number) => 
+                (i === gridY && j === gridX) ? prev.currentColor : cell
+              )
+            );
+            return { ...prev, grid: newGrid };
+          });
+        }
+      };
+      
+      canvas.addEventListener('click', handleClick);
+      return () => canvas.removeEventListener('click', handleClick);
+    }
     return;
   }
 

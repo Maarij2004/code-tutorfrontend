@@ -65,7 +65,7 @@ const Profile: React.FC = () => {
       email: user?.email || '',
     });
     setAvatarFile(null);
-    setAvatarPreview(user?.avatar ? `${process.env.REACT_APP_API_URL || 'https://tgeazxxujp.ap-south-1.awsapprunner.com'}/uploads/avatars/${user.avatar}` : null);
+    setAvatarPreview(user?.avatar ? `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/uploads/avatars/${user.avatar}` : null);
     setEditDialogOpen(true);
   };
 
@@ -128,7 +128,7 @@ const Profile: React.FC = () => {
         return;
       }
 
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://tgeazxxujp.ap-south-1.awsapprunner.com'}/api/user/profile`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/user/profile`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`
