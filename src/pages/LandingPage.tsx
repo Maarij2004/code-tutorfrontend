@@ -95,7 +95,7 @@ const LandingPage: React.FC = () => {
 
   const handleGoogleLogin = () => {
     // Redirect to Google OAuth
-    const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+    const apiUrl = process.env.REACT_APP_API_URL || 'https://tgeazxxujp.ap-south-1.awsapprunner.com';
     window.location.href = `${apiUrl}/api/auth/google`;
   };
 
@@ -331,17 +331,19 @@ const LandingPage: React.FC = () => {
                 sx={{
                   borderColor: '#90caf9',
                   color: '#90caf9',
+                  display: "none",
                   '&:hover': {
                     borderColor: '#64b5f6',
                     backgroundColor: 'rgba(144, 202, 249, 0.1)',
                     transform: 'translateY(-2px)',
+                    display:"none",
                   },
                   px: 4,
                   py: 1.5,
                   ml: 2,
                 }}
               >
-                Watch Demo
+                
               </Button>
               </Box>
             </Grid>

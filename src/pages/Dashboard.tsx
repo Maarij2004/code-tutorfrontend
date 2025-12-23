@@ -274,9 +274,7 @@ const Dashboard: React.FC = () => {
                   </ListItem>
                 ))}
               </List>
-              <Button variant="outlined" fullWidth sx={{ mt: 2 }}>
-                View Full Leaderboard
-              </Button>
+
             </CardContent>
           </Card>
         </Grid>
