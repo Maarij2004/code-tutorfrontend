@@ -87,7 +87,15 @@ const theme = createTheme({
     },
   },
 });
+function Login() {
+  const navigate = useNavigate();
 
+  useEffect(() => {
+    navigate("/dashboard", { replace: true });
+  }, []);
+
+  return null;
+}
 function App() {
   return (
     <Provider store={store}>
