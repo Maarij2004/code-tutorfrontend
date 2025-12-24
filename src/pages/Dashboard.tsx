@@ -226,29 +226,7 @@ const Dashboard: React.FC = () => {
             </Grid>
           </Grid>
 
-          {/* Available Challenges */}
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Available Challenges
-              </Typography>
-              <List>
-                {availableChallenges.map((challenge) => (
-                  <ListItem key={challenge.id} sx={{ px: 0 }}>
-                    <ListItemAvatar>
-                      <Avatar sx={{ bgcolor: 'primary.main' }}>
-                        <Code />
-                      </Avatar>
-                    </ListItemAvatar>
-                    <ListItemText
-                      primary={challenge.title}
-                      secondary={`${challenge.difficulty.charAt(0).toUpperCase() + challenge.difficulty.slice(1)} • +${challenge.xpReward} XP`}
-                    />
-                  </ListItem>
-                ))}
-              </List>
-            </CardContent>
-          </Card>
+          
         </Grid>
 
         {/* Sidebar */}
@@ -269,7 +247,7 @@ const Dashboard: React.FC = () => {
                     </ListItemAvatar>
                     <ListItemText
                       primary={performer.username}
-                      secondary={`Level ${performer.level} • ${performer.totalXP} XP`}
+                      secondary={`Level ${performer.level}`}
                     />
                   </ListItem>
                 ))}

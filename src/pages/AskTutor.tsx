@@ -59,14 +59,93 @@ const AskTutor: React.FC = () => {
     { value: 'flask', label: 'Flask' },
   ];
 
-  const quickQuestions = [
-    "What are variables?",
-    "How do loops work?",
-    "Explain functions",
-    "What are arrays?",
-    "How does conditional logic work?",
-  ];
+// Add this state
+const [quickQuestions, setQuickQuestions] = useState<string[]>([]);
 
+// Add this useEffect after the existing useEffect
+useEffect(() => {
+  const questionSets: { [key: string]: string[] } = {
+    javascript: [
+      "What are variables in JavaScript?",
+      "How do I use arrow functions?",
+      "Explain promises and async/await",
+      "How does the DOM work?",
+      "What are ES6 features?",
+    ],
+    python: [
+      "How do Python variables work?",
+      "Explain list comprehensions", 
+      "How does indentation work?",
+      "What are Python decorators?",
+      "How do I handle exceptions?",
+    ],
+    java: [
+      "What are Java classes and objects?",
+      "How do I use Java collections?",
+      "Explain inheritance in Java",
+      "What are Java interfaces?",
+      "How does exception handling work?",
+    ],
+    cpp: [
+      "What are pointers in C++?",
+      "How do I use STL containers?",
+      "Explain memory management",
+      "What are C++ references?",
+      "How do templates work?",
+    ],
+    html: [
+      "How do HTML semantic elements work?",
+      "What are CSS selectors?",
+      "How do I create responsive layouts?",
+      "Explain CSS flexbox",
+      "How do HTML forms work?",
+    ],
+    react: [
+      "How do React components work?",
+      "What are React hooks?",
+      "How does state management work?",
+      "Explain React props",
+      "How do I handle events in React?",
+    ],
+    typescript: [
+      "What are TypeScript types?",
+      "How do interfaces work?",
+      "Explain TypeScript generics",
+      "What are union types?",
+      "How does type inference work?",
+    ],
+    sql: [
+      "How do SQL JOINs work?",
+      "What are SQL aggregate functions?",
+      "How do I use WHERE clauses?",
+      "Explain database normalization",
+      "How do I create indexes?",
+    ],
+    nodejs: [
+      "How does Node.js event loop work?",
+      "What are npm packages?",
+      "How do I use Express.js?",
+      "Explain Node.js modules",
+      "How do I handle asynchronous code?",
+    ],
+    fastapi: [
+      "How do FastAPI path parameters work?",
+      "What are Pydantic models?",
+      "How do I handle authentication?",
+      "Explain FastAPI dependencies",
+      "How do I create API documentation?",
+    ],
+    flask: [
+      "How do Flask routes work?",
+      "What are Flask blueprints?",
+      "How do I use Jinja2 templates?",
+      "Explain Flask-WTF forms",
+      "How do I handle sessions?",
+    ],
+  };
+
+  setQuickQuestions(questionSets[selectedLanguage] || questionSets.javascript);
+}, [selectedLanguage]);
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };

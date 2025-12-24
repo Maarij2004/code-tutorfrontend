@@ -197,15 +197,13 @@ const CodeEditor: React.FC = () => {
     if (lang === 'nodejs' || lang === 'express') return 'javascript';
     return lang;
   };
-
   const handleRunCode = () => {
     const codeToExecute = currentCode || getLanguageTemplate(language);
     const execLang = runtimeLanguage(language);
     if (codeToExecute.trim()) {
-      dispatch(executeCode({ code: codeToExecute, language: execLang, input: input || undefined }));
+      dispatch(executeCode({ code: codeToExecute, language: execLang, input: input }));
     }
   };
-
   const handleAnalyzeCode = () => {
     const codeToAnalyze = currentCode || getLanguageTemplate(language);
     const execLang = runtimeLanguage(language);
@@ -249,11 +247,10 @@ const CodeEditor: React.FC = () => {
   const getLanguageTemplate = (lang: string) => {
     const templates: { [key: string]: string } = {
       javascript: `// Write your JavaScript code here
-function hello() {
-  console.log("Hello, World!");
-}
-
-hello();`,
+const fs = require('fs');
+const input = fs.readFileSync(0, 'utf8').trim();
+console.log(Number(input) + 1);
+`,
       nodejs: `const http = require('http');
 
 const server = http.createServer((req, res) => {
@@ -399,12 +396,18 @@ func main() {
 fn main() {
     println!("Hello, World!");
 }`,
-      typescript: `// Write your TypeScript code here
-function hello(): void {
+      typescript: `// Simple program: adds 1 to input
+const input = 5; // you can change this value
+const result = input + 1;
+console.log("Result:", result);
+
+// Simple function example
+function hello() {
   console.log("Hello, World!");
 }
 
-hello();`,
+hello();
+`,
       html: `<!DOCTYPE html>
 <html lang="en">
 <head>

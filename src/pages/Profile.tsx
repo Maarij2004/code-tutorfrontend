@@ -15,30 +15,37 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  Alert,
   LinearProgress,
   List,
   ListItem,
-  ListItemAvatar,
   ListItemText,
 } from '@mui/material';
 import {
   Edit,
   Email,
-  Person,
   EmojiEvents,
   Code,
   Whatshot,
-  TrendingUp,
   Star,
   CalendarToday,
-  PhotoCamera,
   Delete,
   Logout,
 } from '@mui/icons-material';
 import { RootState, useAppDispatch } from '../store';
 import { fetchUserProgress } from '../store/slices/userSlice';
 import { updateUser, logout } from '../store/slices/authSlice';
+
+const demoAvatars = [
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=b6e3f4',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka&backgroundColor=c0aede',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Bailey&backgroundColor=d1d4f9',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Charlie&backgroundColor=ffd93d',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Dusty&backgroundColor=ffb3ba',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Fluffy&backgroundColor=bae1ff',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Garfield&backgroundColor=a8e6cf',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Max&backgroundColor=ffd1dc',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Simba&backgroundColor=b19cd9',
+];
 
 const Profile: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -47,48 +54,82 @@ const Profile: React.FC = () => {
   const { progress } = useSelector((state: RootState) => state.user);
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [editForm, setEditForm] = useState({
-    username: '',
-    email: '',
-  });
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [editForm, setEditForm] = useState({ username: '', email: '' });
+  const [selectedAvatar, setSelectedAvatar] = useState<string | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [profileAvatarSrc, setProfileAvatarSrc] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+
+  const API_URL = process.env.REACT_APP_API_URL || 'https://tgeazxxujp.ap-south-1.awsapprunner.com/';
 
   useEffect(() => {
     dispatch(fetchUserProgress());
   }, [dispatch]);
 
+  const getDefaultAvatarUrl = (username: string = 'User') => {
+    return `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(username)}&backgroundColor=b6e3f4`;
+  };
+
+  const loadAvatarSrc = (avatar: string | null | undefined, username: string = 'User') => {
+    if (!avatar) return getDefaultAvatarUrl(username);
+    if (avatar.startsWith('http')) return avatar; // demo/external avatar
+    return `${API_URL}/uploads/avatars/${avatar}`;
+  };
+
+  useEffect(() => {
+    if (user) {
+      setProfileAvatarSrc(loadAvatarSrc(user.avatar, user.username));
+    }
+  }, [user?.avatar, user?.username]);
+
   const handleEditProfile = () => {
-    setEditForm({
-      username: user?.username || '',
-      email: user?.email || '',
-    });
-    setAvatarFile(null);
-    setAvatarPreview(user?.avatar ? `${process.env.REACT_APP_API_URL || 'https://tgeazxxujp.ap-south-1.awsapprunner.com'}/uploads/avatars/${user.avatar}` : null);
+    if (!user) {
+      alert('You must be logged in to edit your profile');
+      return;
+    }
+    setEditForm({ username: user.username || '', email: user.email || '' });
+    const currentAvatar = user.avatar || null;
+    setSelectedAvatar(currentAvatar);
+    setAvatarPreview(loadAvatarSrc(currentAvatar, user.username));
     setEditDialogOpen(true);
   };
 
-  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setAvatarFile(file);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setAvatarPreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const handleRemoveAvatar = () => {
-    setAvatarFile(null);
-    setAvatarPreview(user?.avatar ? `${process.env.REACT_APP_API_URL || 'https://tgeazxxujp.ap-south-1.awsapprunner.com/'}/uploads/avatars/${user.avatar}` : null);
+    setSelectedAvatar(null);
+    setAvatarPreview(getDefaultAvatarUrl(editForm.username));
   };
 
   const handleSignOut = () => {
     dispatch(logout());
     navigate('/');
+  };
+
+  // Convert SVG to PNG before uploading
+  const svgToPngFile = async (svgUrl: string): Promise<File> => {
+    const response = await fetch(svgUrl);
+    const svgText = await response.text();
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d')!;
+    const img = new Image();
+    const svgBlob = new Blob([svgText], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(svgBlob);
+
+    return new Promise((resolve) => {
+      img.onload = () => {
+        canvas.width = img.width || 256;
+        canvas.height = img.height || 256;
+        ctx.drawImage(img, 0, 0);
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const file = new File([blob], 'avatar.png', { type: 'image/png' });
+            resolve(file);
+          }
+        }, 'image/png');
+        URL.revokeObjectURL(url);
+      };
+      img.src = url;
+    });
   };
 
   const handleSaveProfile = async () => {
@@ -104,78 +145,50 @@ const Profile: React.FC = () => {
       formData.append('username', editForm.username.trim());
       formData.append('email', editForm.email.trim());
 
-      if (avatarFile) {
-        // Validate file size (16MB max)
-        if (avatarFile.size > 16 * 1024 * 1024) {
-          alert('File size must be less than 16MB');
-          setIsUpdating(false);
-          return;
+      const originalAvatar = user?.avatar || null;
+      if (selectedAvatar !== originalAvatar) {
+        if (selectedAvatar === null) {
+          formData.append('avatar', '');
+        } else if (selectedAvatar.startsWith('http')) {
+          const file = await svgToPngFile(selectedAvatar);
+          formData.append('avatar', file);
         }
-        // Validate file type
-        const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif'];
-        if (!validTypes.includes(avatarFile.type)) {
-          alert('Invalid file type. Please use PNG, JPG, JPEG, or GIF');
-          setIsUpdating(false);
-          return;
-        }
-        formData.append('avatar', avatarFile);
       }
 
       const token = localStorage.getItem('token');
       if (!token) {
-        alert('You must be logged in to update your profile');
+        alert('Authentication token missing. Please log in again.');
         setIsUpdating(false);
         return;
       }
 
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://tgeazxxujp.ap-south-1.awsapprunner.com'}/api/user/profile`, {
+      const response = await fetch(`${API_URL}/api/user/profile`, {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`
-          // Don't set Content-Type - let browser set it with boundary for FormData
-        },
-        body: formData
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
       });
 
-      let result;
-      try {
-        result = await response.json();
-      } catch (jsonError) {
-        // If response is not JSON, get text
-        const text = await response.text();
-        console.error('Non-JSON response:', text);
-        alert(`Failed to update profile: ${response.status} ${response.statusText}`);
-        setIsUpdating(false);
-        return;
-      }
+      const result = await response.json();
 
-      if (response.ok) {
-        // Update the user state with the new data
-        if (result.user) {
-          dispatch(updateUser({
-            username: result.user.username,
-            email: result.user.email,
-            avatar: result.user.avatar,
-            level: result.user.level,
-            totalXP: result.user.total_xp || result.user.totalXP,
-            streak: result.user.streak
-          }));
-        }
-        
-        // Close dialog and reset form
+      if (response.ok && result.user) {
+        dispatch(updateUser({
+          username: result.user.username,
+          email: result.user.email,
+          avatar: result.user.avatar || null,
+          level: result.user.level,
+          totalXP: result.user.total_xp || result.user.totalXP,
+          streak: result.user.streak,
+        }));
         setEditDialogOpen(false);
-        setAvatarFile(null);
-        setAvatarPreview(null);
         alert('Profile updated successfully!');
+        setProfileAvatarSrc(loadAvatarSrc(result.user.avatar, result.user.username));
       } else {
-        const errorMessage = result.error || result.message || `Failed to update profile (${response.status})`;
-        console.error('Profile update error:', errorMessage, result);
-        alert(errorMessage);
+        const errorMsg = result.error || result.message || 'Failed to update profile';
+        alert(errorMsg);
       }
     } catch (error: any) {
-      console.error('Profile update error:', error);
-      const errorMessage = error?.message || 'Failed to update profile. Please check your connection and try again.';
-      alert(errorMessage);
+      console.error('Update error:', error);
+      alert('Network error. Please check your connection and try again.');
     } finally {
       setIsUpdating(false);
     }
@@ -196,77 +209,47 @@ const Profile: React.FC = () => {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom sx={{ mb: 4, fontWeight: 'bold' }}>
-        Profile 👤
-      </Typography>
+      <Typography variant="h4" gutterBottom sx={{ mb: 4, fontWeight: 'bold' }}>Profile 👤</Typography>
 
       <Grid container spacing={3}>
-        {/* Profile Header */}
         <Grid item xs={12}>
           <Card>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
                 <Avatar
-                  src={user?.avatar ? `${process.env.REACT_APP_API_URL || 'https://tgeazxxujp.ap-south-1.awsapprunner.com/'}/uploads/avatars/${user.avatar}` : undefined}
-                  sx={{ width: 100, height: 100, bgcolor: 'primary.main' }}
+                  src={profileAvatarSrc || undefined}
+                  sx={{ width: 100, height: 100 }}
                 >
-                  {user?.username?.charAt(0).toUpperCase()}
+                  {user?.username?.charAt(0).toUpperCase() || 'U'}
                 </Avatar>
 
                 <Box sx={{ flex: 1 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-                    <Typography variant="h5">{user?.username}</Typography>
-                    <Chip
-                      label={`Level ${levelInfo.level}`}
-                      color="primary"
-                      size="small"
-                    />
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      startIcon={<Edit />}
-                      onClick={handleEditProfile}
-                    >
-                      Edit Profile
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      size="small"
-                      startIcon={<Logout />}
-                      onClick={handleSignOut}
-                    >
-                      Sign Out
-                    </Button>
+                    <Typography variant="h5">{user?.username || 'User'}</Typography>
+                    <Chip label={`Level ${levelInfo.level}`} color="primary" size="small" />
+                    <Button variant="outlined" size="small" startIcon={<Edit />} onClick={handleEditProfile}>Edit Profile</Button>
+                    <Button variant="outlined" color="error" size="small" startIcon={<Logout />} onClick={handleSignOut}>Sign Out</Button>
                   </Box>
 
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                     <Email sx={{ fontSize: 16, color: 'text.secondary' }} />
-                    <Typography variant="body2" color="text.secondary">
-                      {user?.email}
-                    </Typography>
+                    <Typography variant="body2" color="text.secondary">{user?.email || 'Not set'}</Typography>
                   </Box>
 
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Star sx={{ color: 'warning.main', fontSize: 16 }} />
-                      <Typography variant="body2">
-                        {progress?.totalXP || 0} XP
-                      </Typography>
+                      <Typography variant="body2">{progress?.totalXP || 0} XP</Typography>
                     </Box>
 
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Whatshot sx={{ color: 'error.main', fontSize: 16 }} />
-                      <Typography variant="body2">
-                        {progress?.streak || 0} day streak
-                      </Typography>
+                      <Typography variant="body2">{progress?.streak || 0} day streak</Typography>
                     </Box>
 
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <CalendarToday sx={{ color: 'info.main', fontSize: 16 }} />
-                      <Typography variant="body2">
-                        Joined recently
-                      </Typography>
+                      <Typography variant="body2">Joined recently</Typography>
                     </Box>
                   </Box>
                 </Box>
@@ -279,22 +262,14 @@ const Profile: React.FC = () => {
         <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Level Progress
-              </Typography>
-
+              <Typography variant="h6" gutterBottom>Level Progress</Typography>
               <Box sx={{ mb: 2 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                   <Typography variant="body2">Level {levelInfo.level}</Typography>
                   <Typography variant="body2">{levelInfo.xpToNext} XP to next level</Typography>
                 </Box>
-                <LinearProgress
-                  variant="determinate"
-                  value={levelInfo.progress}
-                  sx={{ height: 12, borderRadius: 6 }}
-                />
+                <LinearProgress variant="determinate" value={levelInfo.progress} sx={{ height: 12, borderRadius: 6 }} />
               </Box>
-
               <Typography variant="body2" color="text.secondary">
                 Keep solving challenges and analyzing code with AI to earn more XP!
               </Typography>
@@ -306,32 +281,20 @@ const Profile: React.FC = () => {
         <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Statistics
-              </Typography>
-
+              <Typography variant="h6" gutterBottom>Statistics</Typography>
               <Grid container spacing={2}>
                 <Grid item xs={6}>
                   <Box sx={{ textAlign: 'center', p: 2 }}>
                     <Code sx={{ fontSize: 32, color: 'primary.main', mb: 1 }} />
-                    <Typography variant="h4" color="primary">
-                      {progress?.completedChallenges?.length || 0}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Challenges Completed
-                    </Typography>
+                    <Typography variant="h4" color="primary">{progress?.completedChallenges?.length || 0}</Typography>
+                    <Typography variant="body2" color="text.secondary">Challenges Completed</Typography>
                   </Box>
                 </Grid>
-
                 <Grid item xs={6}>
                   <Box sx={{ textAlign: 'center', p: 2 }}>
                     <EmojiEvents sx={{ fontSize: 32, color: 'warning.main', mb: 1 }} />
-                    <Typography variant="h4" color="warning.main">
-                      {progress?.achievements?.length || 0}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Achievements
-                    </Typography>
+                    <Typography variant="h4" color="warning.main">{progress?.achievements?.length || 0}</Typography>
+                    <Typography variant="body2" color="text.secondary">Achievements</Typography>
                   </Box>
                 </Grid>
               </Grid>
@@ -343,15 +306,10 @@ const Profile: React.FC = () => {
         <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Learning Insights
-              </Typography>
-
+              <Typography variant="h6" gutterBottom>Learning Insights</Typography>
               {weakAreas.length > 0 && (
                 <Box sx={{ mb: 3 }}>
-                  <Typography variant="subtitle2" gutterBottom sx={{ color: 'error.main' }}>
-                    Areas to Focus On
-                  </Typography>
+                  <Typography variant="subtitle2" gutterBottom sx={{ color: 'error.main' }}>Areas to Focus On</Typography>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                     {weakAreas.map((area, index) => (
                       <Chip key={index} label={area} size="small" color="error" variant="outlined" />
@@ -359,22 +317,16 @@ const Profile: React.FC = () => {
                   </Box>
                 </Box>
               )}
-
               {learningPath.length > 0 && (
                 <Box>
-                  <Typography variant="subtitle2" gutterBottom sx={{ color: 'success.main' }}>
-                    Recommended Learning Path
-                  </Typography>
+                  <Typography variant="subtitle2" gutterBottom sx={{ color: 'success.main' }}>Recommended Learning Path</Typography>
                   <List dense>
                     {learningPath.slice(0, 3).map((topic, index) => (
-                      <ListItem key={index}>
-                        <ListItemText primary={topic} />
-                      </ListItem>
+                      <ListItem key={index}><ListItemText primary={topic} /></ListItem>
                     ))}
                   </List>
                 </Box>
               )}
-
               {weakAreas.length === 0 && learningPath.length === 0 && (
                 <Typography variant="body2" color="text.secondary">
                   Complete more challenges to get personalized learning insights!
@@ -390,52 +342,55 @@ const Profile: React.FC = () => {
         <DialogTitle>Edit Profile</DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            {/* Avatar Upload Section */}
             <Box sx={{ mb: 3, textAlign: 'center' }}>
+              <Typography variant="h6" gutterBottom>Choose Your Avatar</Typography>
+
               <Avatar
                 src={avatarPreview || undefined}
                 sx={{
-                  width: 100,
-                  height: 100,
-                  mb: 2,
-                  bgcolor: avatarPreview ? 'transparent' : 'primary.main'
+                  width: 120,
+                  height: 120,
+                  mb: 3,
+                  border: '4px solid',
+                  borderColor: 'primary.light',
                 }}
               >
-                {!avatarPreview && editForm.username.charAt(0).toUpperCase()}
+                {editForm.username.charAt(0).toUpperCase() || 'U'}
               </Avatar>
 
-              <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-                <Button
-                  component="label"
-                  variant="outlined"
-                  startIcon={<PhotoCamera />}
-                  size="small"
-                >
-                  Upload Photo
-                  <input
-                    type="file"
-                    hidden
-                    accept="image/*"
-                    onChange={handleAvatarChange}
-                  />
-                </Button>
+              <Grid container spacing={2} justifyContent="center" sx={{ maxWidth: 360 }}>
+                {demoAvatars.map((url, index) => (
+                  <Grid item key={index}>
+                    <Avatar
+                      src={url}
+                      onClick={() => {
+                        setSelectedAvatar(url);
+                        setAvatarPreview(url);
+                      }}
+                      sx={{
+                        width: 70,
+                        height: 70,
+                        cursor: 'pointer',
+                        border: selectedAvatar === url ? '4px solid' : '2px solid',
+                        borderColor: selectedAvatar === url ? 'primary.main' : 'grey.300',
+                        transition: 'all 0.2s',
+                      }}
+                    />
+                  </Grid>
+                ))}
+              </Grid>
 
-                {avatarPreview && avatarPreview !== (user?.avatar ? `${process.env.REACT_APP_API_URL || 'https://tgeazxxujp.ap-south-1.awsapprunner.com/'}/uploads/avatars/${user.avatar}` : null) && (
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    startIcon={<Delete />}
-                    size="small"
-                    onClick={handleRemoveAvatar}
-                  >
-                    Remove
-                  </Button>
-                )}
-              </Box>
-
-              <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                Supported formats: PNG, JPG, JPEG, GIF (max 16MB)
-              </Typography>
+              <Button
+                variant="text"
+                color="error"
+                size="small"
+                startIcon={<Delete />}
+                onClick={handleRemoveAvatar}
+                sx={{ mt: 2 }}
+                disabled={selectedAvatar === null}
+              >
+                Use Default Avatar
+              </Button>
             </Box>
 
             <TextField
@@ -444,6 +399,7 @@ const Profile: React.FC = () => {
               value={editForm.username}
               onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
               sx={{ mb: 2 }}
+              required
             />
             <TextField
               fullWidth
@@ -451,13 +407,12 @@ const Profile: React.FC = () => {
               type="email"
               value={editForm.email}
               onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+              required
             />
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setEditDialogOpen(false)} disabled={isUpdating}>
-            Cancel
-          </Button>
+          <Button onClick={() => setEditDialogOpen(false)} disabled={isUpdating}>Cancel</Button>
           <Button
             onClick={handleSaveProfile}
             variant="contained"

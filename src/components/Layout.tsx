@@ -181,18 +181,14 @@ const Layout: React.FC = () => {
           </Typography>
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Badge badgeContent={progress?.streak || 0} color="secondary">
-              <Typography variant="body2" sx={{ mr: 1 }}>
-                🔥 {progress?.streak || 0}
-              </Typography>
-            </Badge>
+            
 
             <Typography variant="body2">
               Level {progress?.level || 1} • {progress?.totalXP || 0} XP
             </Typography>
 
             <Avatar
-              src={user?.avatar ? `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/uploads/avatars/${user.avatar}` : undefined}
+              src={user?.avatar ? `${process.env.REACT_APP_API_URL || 'https://tgeazxxujp.ap-south-1.awsapprunner.com/'}/uploads/avatars/${user.avatar}` : undefined}
               sx={{ 
                 width: 32, 
                 height: 32,

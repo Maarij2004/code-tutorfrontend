@@ -25,6 +25,8 @@ import {
   ListItemIcon,
   ListItemText,
   CircularProgress,
+  Checkbox,
+  FormControlLabel,
 } from '@mui/material';
 import {
   Code,
@@ -45,17 +47,22 @@ import {
   Build,
   Speed,
   Security,
+  Visibility,
+  VisibilityOff,
 } from '@mui/icons-material';
 import GoogleIcon from '@mui/icons-material/Google';
 import { login, register, clearVerification } from '../store/slices/authSlice';
 import EmailVerificationDialog from '../components/EmailVerificationDialog';
-
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { requiresVerification, pendingVerificationEmail } = useSelector((state: RootState) => state.auth);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+  // Add these state variables after your existing state declarations:
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [acceptPolicy, setAcceptPolicy] = useState(false);
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -64,7 +71,6 @@ const LandingPage: React.FC = () => {
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
   const handleStartNow = () => {
     setAuthModalOpen(true);
     setIsSignUp(true);
@@ -75,17 +81,20 @@ const LandingPage: React.FC = () => {
     setIsSignUp(false);
   };
 
-  const handleCloseModal = () => {
-    setAuthModalOpen(false);
-    setError('');
-    setFormData({
-      username: '',
-      email: '',
-      password: '',
-      confirmPassword: '',
-    });
-  };
-
+ // Update your handleCloseModal function:
+const handleCloseModal = () => {
+  setAuthModalOpen(false);
+  setError('');
+  setShowPassword(false);
+  setShowConfirmPassword(false);
+  setAcceptPolicy(false); // Add this line
+  setFormData({
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
+};
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
@@ -95,75 +104,73 @@ const LandingPage: React.FC = () => {
 
   const handleGoogleLogin = () => {
     // Redirect to Google OAuth
-    const apiUrl = process.env.REACT_APP_API_URL || 'https://tgeazxxujp.ap-south-1.awsapprunner.com';
+    const apiUrl = process.env.REACT_APP_API_URL || 'https://tgeazxxujp.ap-south-1.awsapprunner.com/';
     window.location.href = `${apiUrl}/api/auth/google`;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setIsLoading(true);
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError('');
+  setIsLoading(true);
 
-    try {
-      if (isSignUp) {
-        if (formData.password !== formData.confirmPassword) {
-          setError('Passwords do not match');
-          setIsLoading(false);
-          return;
-        }
-        if (!formData.username || !formData.email || !formData.password) {
-          setError('All fields are required');
-          setIsLoading(false);
-          return;
-        }
-
-        // Handle signup
-        try {
-          const result = await dispatch(register({
-            username: formData.username,
-            email: formData.email,
-            password: formData.password
-          })).unwrap();
-
-          if (result.requiresVerification) {
-            // Email verification required - keep modal open for verification
-            setError('');
-          } else {
-            // Direct login (fallback)
-            setAuthModalOpen(false);
-            navigate('/dashboard');
-          }
-        } catch (error: any) {
-          // Extract error message from rejectWithValue payload
-          const errorMessage = error?.error || error?.message || error?.toString() || 'Registration failed';
-          setError(errorMessage);
-        }
-      } else {
-        if (!formData.email || !formData.password) {
-          setError('Email and password are required');
-          setIsLoading(false);
-          return;
-        }
-
-        // Handle signin
-        try {
-          await dispatch(login({
-            email: formData.email,
-            password: formData.password
-          })).unwrap();
-          setAuthModalOpen(false);
-          navigate('/dashboard');
-        } catch (error: any) {
-          setError(error?.message || 'Login failed');
-        }
+  try {
+    // Validation
+    if (isSignUp) {
+      if (formData.password !== formData.confirmPassword) {
+        setError('Passwords do not match');
+        setIsLoading(false);
+        return;
       }
-    } catch (err) {
-      setError('An unexpected error occurred');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      if (!formData.username || !formData.email || !formData.password) {
+        setError('All fields are required');
+        setIsLoading(false);
+        return;
+      }
+      // Add policy acceptance validation
+      if (!acceptPolicy) {
+        setError('You must accept the Terms of Service and Privacy Policy');
+        setIsLoading(false);
+        return;
+      }
 
+      // Handle signup
+      const result = await dispatch(register({
+        username: formData.username,
+        email: formData.email,
+        password: formData.password
+      })).unwrap();
+
+      if (result.requiresVerification) {
+        // Email verification required - keep modal open for verification
+        setError('');
+      } else {
+        // Direct login (fallback)
+        setAuthModalOpen(false);
+        navigate('/dashboard');
+      }
+    } else {
+      if (!formData.email || !formData.password) {
+        setError('Email and password are required');
+        setIsLoading(false);
+        return;
+      }
+
+      // Handle signin
+      await dispatch(login({
+        email: formData.email,
+        password: formData.password
+      })).unwrap();
+      setAuthModalOpen(false);
+      navigate('/dashboard');
+    }
+  } catch (error: any) {
+    // Handle both signup and login errors
+    const errorMessage = error?.error || error?.message || error?.toString() || 'An unexpected error occurred';
+    setError(errorMessage);
+  } finally {
+    setIsLoading(false);
+  }
+};
   const features = [
     {
       icon: <SmartToy sx={{ fontSize: 40, color: 'primary.main' }} />,
@@ -878,7 +885,7 @@ const LandingPage: React.FC = () => {
               or
             </Typography>
           </Divider>
-
+     
           <Box component="form" onSubmit={handleSubmit}>
             {isSignUp && (
               <TextField
@@ -912,38 +919,93 @@ const LandingPage: React.FC = () => {
               }}
             />
 
-            <TextField
-              fullWidth
-              label="Password"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={handleInputChange}
-              required
-              size="small"
-              sx={{ mb: isSignUp ? 1.5 : 2 }}
-              InputProps={{
-                startAdornment: <Lock sx={{ mr: 1, color: 'action.active', fontSize: '1.2rem' }} />,
-              }}
-            />
+<TextField
+  fullWidth
+  label="Password"
+  name="password"
+  type={showPassword ? 'text' : 'password'}
+  value={formData.password}
+  onChange={handleInputChange}
+  required
+  size="small"
+  sx={{ mb: isSignUp ? 1.5 : 2 }}
+  InputProps={{
+    startAdornment: <Lock sx={{ mr: 1, color: 'action.active', fontSize: '1.2rem' }} />,
+    endAdornment: (
+      <IconButton
+        aria-label="toggle password visibility"
+        onClick={() => setShowPassword(!showPassword)}
+        edge="end"
+        sx={{ color: 'action.active' }}
+      >
+        {showPassword ? <VisibilityOff /> : <Visibility />}
+      </IconButton>
+    ),
+  }}
+/>
 
-            {isSignUp && (
-              <TextField
-                fullWidth
-                label="Confirm Password"
-                name="confirmPassword"
-                type="password"
-                value={formData.confirmPassword}
-                onChange={handleInputChange}
-                required
-                size="small"
-                sx={{ mb: 2 }}
-                InputProps={{
-                  startAdornment: <Lock sx={{ mr: 1, color: 'action.active', fontSize: '1.2rem' }} />,
-                }}
-              />
-            )}
-
+{isSignUp && (
+  <TextField
+    fullWidth
+    label="Confirm Password"
+    name="confirmPassword"
+    type={showConfirmPassword ? 'text' : 'password'}
+    value={formData.confirmPassword}
+    onChange={handleInputChange}
+    required
+    size="small"
+    sx={{ mb: 2 }}
+    InputProps={{
+      startAdornment: <Lock sx={{ mr: 1, color: 'action.active', fontSize: '1.2rem' }} />,
+      endAdornment: (
+        <IconButton
+          aria-label="toggle confirm password visibility"
+          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+          edge="end"
+          sx={{ color: 'action.active' }}
+        >
+          {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+        </IconButton>
+      ),
+    }}
+  />
+)}
+{isSignUp && (
+  <FormControlLabel
+    control={
+      <Checkbox
+        checked={acceptPolicy}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAcceptPolicy(e.target.checked)}
+        color="primary"
+        sx={{
+          color: 'rgba(144, 202, 249, 0.5)',
+          '&.Mui-checked': {
+            color: '#90caf9',
+          },
+        }}
+      />
+    }
+    label={
+      <Typography variant="body2" sx={{ fontSize: '0.8rem', color: 'text.secondary' }}>
+        I agree to the{' '}
+        <span style={{ color: '#90caf9', textDecoration: 'underline' }}>
+          Terms of Service
+        </span>{' '}
+        and{' '}
+        <span style={{ color: '#90caf9', textDecoration: 'underline' }}>
+          Privacy Policy
+        </span>
+      </Typography>
+    }
+    sx={{ 
+      mb: 1, 
+      alignItems: 'center',
+      '& .MuiFormControlLabel-label': {
+        lineHeight: 1.2,
+      }
+    }}
+  />
+)}
             <Button
               type="submit"
               fullWidth

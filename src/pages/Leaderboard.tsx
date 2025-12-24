@@ -344,44 +344,7 @@ const Leaderboard: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Weekly Goals */}
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Weekly Goals
-              </Typography>
-
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="body2" gutterBottom>
-                  Complete 5 challenges
-                </Typography>
-                <LinearProgress variant="determinate" value={60} sx={{ height: 8, borderRadius: 4 }} />
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                  3/5 completed
-                </Typography>
-              </Box>
-
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="body2" gutterBottom>
-                  Maintain 7-day streak
-                </Typography>
-                <LinearProgress variant="determinate" value={100} sx={{ height: 8, borderRadius: 4 }} />
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                  7/7 days
-                </Typography>
-              </Box>
-
-              <Box>
-                <Typography variant="body2" gutterBottom>
-                  Reach Level 5
-                </Typography>
-                <LinearProgress variant="determinate" value={80} sx={{ height: 8, borderRadius: 4 }} />
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                  Level 4 (800/1000 XP)
-                </Typography>
-              </Box>
-            </CardContent>
-          </Card>
+         
         </Grid>
       </Grid>
     </Box>
