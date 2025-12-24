@@ -94,7 +94,7 @@ const Leaderboard: React.FC = () => {
                   <Box sx={{ textAlign: 'center' }}>
                     <Box sx={{ position: 'relative', mb: 2 }}>
                       <Avatar
-                        src={leaderboard[1].avatar ? `${process.env.REACT_APP_API_URL || 'https://tgeazxxujp.ap-south-1.awsapprunner.com'}/uploads/avatars/${leaderboard[1].avatar}` : undefined}
+                        src={leaderboard[1].avatar ? `${process.env.REACT_APP_API_URL || 'https://tgeazxxujp.ap-south-1.awsapprunner.com/'}/uploads/avatars/${leaderboard[1].avatar}` : undefined}
                         sx={{
                           width: 80,
                           height: 80,
@@ -137,7 +137,7 @@ const Leaderboard: React.FC = () => {
                   <Box sx={{ textAlign: 'center' }}>
                     <Box sx={{ position: 'relative', mb: 2 }}>
                       <Avatar
-                        src={leaderboard[0].avatar ? `${process.env.REACT_APP_API_URL || 'hhttps://tgeazxxujp.ap-south-1.awsapprunner.com'}/uploads/avatars/${leaderboard[0].avatar}` : undefined}
+                        src={leaderboard[0].avatar ? `${process.env.REACT_APP_API_URL || 'https://tgeazxxujp.ap-south-1.awsapprunner.com/'}/uploads/avatars/${leaderboard[0].avatar}` : undefined}
                         sx={{
                           width: 100,
                           height: 100,
@@ -180,7 +180,7 @@ const Leaderboard: React.FC = () => {
                   <Box sx={{ textAlign: 'center' }}>
                     <Box sx={{ position: 'relative', mb: 2 }}>
                       <Avatar
-                        src={leaderboard[2].avatar ? `${process.env.REACT_APP_API_URL || 'https://tgeazxxujp.ap-south-1.awsapprunner.com'}/uploads/avatars/${leaderboard[2].avatar}` : undefined}
+                        src={leaderboard[2].avatar ? `${process.env.REACT_APP_API_URL || 'https://tgeazxxujp.ap-south-1.awsapprunner.com/'}/uploads/avatars/${leaderboard[2].avatar}` : undefined}
                         sx={{
                           width: 80,
                           height: 80,
@@ -254,7 +254,7 @@ const Leaderboard: React.FC = () => {
                       </ListItemAvatar>
                       <ListItemAvatar>
                         <Avatar
-                          src={entry.avatar ? `${process.env.REACT_APP_API_URL || 'https://tgeazxxujp.ap-south-1.awsapprunner.com'}/uploads/avatars/${entry.avatar}` : undefined}
+                          src={entry.avatar ? `${process.env.REACT_APP_API_URL || 'https://tgeazxxujp.ap-south-1.awsapprunner.com/'}/uploads/avatars/${entry.avatar}` : undefined}
                           sx={{
                             bgcolor: isCurrentUser ? 'primary.main' : 'grey.300',
                             border: rank <= 3 ? `2px solid ${getRankColor(rank)}` : 'none'

@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState, useAppDispatch } from '../store';
+import { initializeAuth } from '../store/slices/authSlice'; // Add this import
+// ... existing imports ...
 import {
   Box,
   Container,
@@ -11,7 +13,6 @@ import {
   Card,
   CardContent,
   Chip,
-  Avatar,
   AppBar,
   Toolbar,
   IconButton,
@@ -27,6 +28,7 @@ import {
   CircularProgress,
   Checkbox,
   FormControlLabel,
+  InputAdornment,
 } from '@mui/material';
 import {
   Code,
@@ -53,124 +55,335 @@ import {
 import GoogleIcon from '@mui/icons-material/Google';
 import { login, register, clearVerification } from '../store/slices/authSlice';
 import EmailVerificationDialog from '../components/EmailVerificationDialog';
+
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { requiresVerification, pendingVerificationEmail } = useSelector((state: RootState) => state.auth);
+  const {user, requiresVerification, pendingVerificationEmail } = useSelector((state: RootState) => state.auth);
+
+  // Check if user is already authenticated on page load
+  useEffect(() => {
+    // Initialize auth to check for existing tokens
+    dispatch(initializeAuth());
+  }, [dispatch]);
+
+  // Redirect to dashboard if user is authenticated
+  useEffect(() => {
+    // Initialize auth to check for existing tokens
+    dispatch(initializeAuth());
+  }, [dispatch]);
+  const handleContinueLearning = () => {
+    navigate('/dashboard');
+  };
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
-  // Add these state variables after your existing state declarations:
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [isOtpVerified, setIsOtpVerified] = useState(false);
+  const [otpResendTimer, setOtpResendTimer] = useState(0);
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
   const [acceptPolicy, setAcceptPolicy] = useState(false);
+
   const [formData, setFormData] = useState({
     username: '',
     email: '',
     password: '',
     confirmPassword: '',
+    otp: '',
+    newPassword: '',
+    confirmNewPassword: '',
   });
+
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  const apiUrl = process.env.REACT_APP_API_URL || 'https://tgeazxxujp.ap-south-1.awsapprunner.com';
+
   const handleStartNow = () => {
     setAuthModalOpen(true);
     setIsSignUp(true);
+    resetModalState();
   };
 
   const handleSignIn = () => {
     setAuthModalOpen(true);
     setIsSignUp(false);
+    resetModalState();
   };
 
- // Update your handleCloseModal function:
-const handleCloseModal = () => {
-  setAuthModalOpen(false);
-  setError('');
-  setShowPassword(false);
-  setShowConfirmPassword(false);
-  setAcceptPolicy(false); // Add this line
-  setFormData({
-    username: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-  });
-};
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const resetModalState = () => {
+    setIsForgotPassword(false);
+    setIsOtpSent(false);
+    setIsOtpVerified(false);
+    setError('');
+    setSuccess('');
+    setOtpResendTimer(0);
     setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
+      username: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      otp: '',
+      newPassword: '',
+      confirmNewPassword: '',
     });
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+    setShowNewPassword(false);
+    setShowConfirmNewPassword(false);
+    setAcceptPolicy(false);
+  };
+
+  const handleCloseModal = () => {
+    setAuthModalOpen(false);
+    resetModalState();
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleGoogleLogin = () => {
-    // Redirect to Google OAuth
-    const apiUrl = process.env.REACT_APP_API_URL || 'https://tgeazxxujp.ap-south-1.awsapprunner.com/';
     window.location.href = `${apiUrl}/api/auth/google`;
   };
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setError('');
-  setIsLoading(true);
+  // Request Password Reset OTP
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    setIsLoading(true);
 
-  try {
+    try {
+      const response = await fetch(`${apiUrl}/api/auth/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to send OTP');
+
+      setSuccess(data.message || 'OTP sent to your email!');
+      setIsOtpSent(true);
+      setOtpResendTimer(60);
+      
+      // Start countdown timer
+      const timer = setInterval(() => {
+        setOtpResendTimer(prev => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } catch (err: any) {
+      setError(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Verify OTP
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    setIsLoading(true);
+
+    if (!formData.otp || formData.otp.length !== 6) {
+      setError('Please enter a valid 6-digit OTP');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${apiUrl}/api/auth/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          otp: formData.otp,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Invalid OTP');
+
+      setSuccess(data.message || 'OTP verified successfully!');
+      setIsOtpVerified(true);
+    } catch (err: any) {
+      setError(err.message || 'Invalid or expired OTP');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Reset Password after OTP verification
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    setIsLoading(true);
+
     // Validation
-    if (isSignUp) {
-      if (formData.password !== formData.confirmPassword) {
-        setError('Passwords do not match');
-        setIsLoading(false);
-        return;
-      }
-      if (!formData.username || !formData.email || !formData.password) {
-        setError('All fields are required');
-        setIsLoading(false);
-        return;
-      }
-      // Add policy acceptance validation
-      if (!acceptPolicy) {
-        setError('You must accept the Terms of Service and Privacy Policy');
-        setIsLoading(false);
-        return;
-      }
+    if (!formData.newPassword || !formData.confirmNewPassword) {
+      setError('Please enter new password and confirm it');
+      setIsLoading(false);
+      return;
+    }
 
-      // Handle signup
-      const result = await dispatch(register({
-        username: formData.username,
-        email: formData.email,
-        password: formData.password
-      })).unwrap();
+    if (formData.newPassword !== formData.confirmNewPassword) {
+      setError('Passwords do not match');
+      setIsLoading(false);
+      return;
+    }
 
-      if (result.requiresVerification) {
-        // Email verification required - keep modal open for verification
-        setError('');
+    // Basic password strength validation
+    if (formData.newPassword.length < 8) {
+      setError('Password must be at least 8 characters long');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${apiUrl}/api/auth/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.newPassword,
+          confirm_password: formData.confirmNewPassword,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to reset password');
+
+      setSuccess('Password reset successfully! You can now sign in with your new password.');
+      
+      // Auto-close after successful reset
+      setTimeout(() => {
+        handleCloseModal();
+        setIsSignUp(false);
+      }, 2000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to reset password. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Resend OTP
+  const handleResendOtp = async () => {
+    setError('');
+    setSuccess('');
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(`${apiUrl}/api/auth/resend-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to resend OTP');
+
+      setSuccess(data.message || 'New OTP sent to your email!');
+      setIsOtpSent(true);
+      setOtpResendTimer(60);
+      
+      // Start countdown timer
+      const timer = setInterval(() => {
+        setOtpResendTimer(prev => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to resend OTP. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle regular sign up/sign in
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    setIsLoading(true);
+
+    try {
+      if (isSignUp) {
+        // Sign up validation
+        if (formData.password !== formData.confirmPassword) {
+          setError('Passwords do not match');
+          setIsLoading(false);
+          return;
+        }
+        if (!formData.username || !formData.email || !formData.password) {
+          setError('All fields are required');
+          setIsLoading(false);
+          return;
+        }
+        if (!acceptPolicy) {
+          setError('You must accept the Terms of Service and Privacy Policy');
+          setIsLoading(false);
+          return;
+        }
+
+        // Password strength validation
+        if (formData.password.length < 8) {
+          setError('Password must be at least 8 characters long');
+          setIsLoading(false);
+          return;
+        }
+
+        const result = await dispatch(register({
+          username: formData.username,
+          email: formData.email,
+          password: formData.password
+        })).unwrap();
+
+        if (!result.requiresVerification) {
+          setAuthModalOpen(false);
+          navigate('/dashboard');
+        }
       } else {
-        // Direct login (fallback)
+        // Sign in
+        if (!formData.email || !formData.password) {
+          setError('Email and password are required');
+          setIsLoading(false);
+          return;
+        }
+
+        await dispatch(login({
+          email: formData.email,
+          password: formData.password
+        })).unwrap();
         setAuthModalOpen(false);
         navigate('/dashboard');
       }
-    } else {
-      if (!formData.email || !formData.password) {
-        setError('Email and password are required');
-        setIsLoading(false);
-        return;
-      }
-
-      // Handle signin
-      await dispatch(login({
-        email: formData.email,
-        password: formData.password
-      })).unwrap();
-      setAuthModalOpen(false);
-      navigate('/dashboard');
+    } catch (error: any) {
+      const errorMessage = error?.error || error?.message || 'An unexpected error occurred';
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
-  } catch (error: any) {
-    // Handle both signup and login errors
-    const errorMessage = error?.error || error?.message || error?.toString() || 'An unexpected error occurred';
-    setError(errorMessage);
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
+
   const features = [
     {
       icon: <SmartToy sx={{ fontSize: 40, color: 'primary.main' }} />,
@@ -204,28 +417,14 @@ const handleSubmit = async (e: React.FormEvent) => {
     },
   ];
 
-
   return (
     <Box sx={{ minHeight: '100vh', backgroundColor: '#0a0a0a' }}>
       {/* Header */}
-      <AppBar position="static" sx={{
-        backgroundColor: '#0d0d0d',
-        color: 'white',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
-      }}>
+           {/* <AppBar position="static" sx={{ backgroundColor: 'rgba(18, 18, 18, 0.95)', backdropFilter: 'blur(10px)' }}> */}
+           <AppBar position="static" sx={{ backgroundColor: 'rgba(18, 18, 18, 0.95)', backdropFilter: 'blur(10px)' }}>
         <Container maxWidth="lg">
           <Toolbar sx={{ justifyContent: 'space-between' }}>
-            <Box sx={{
-              display: 'flex',
-              alignItems: 'center',
-              animation: 'slideInLeft 0.8s ease-out'
-            }}>
-              <Code sx={{
-                fontSize: 32,
-                color: 'primary.main',
-                mr: 1,
-                animation: 'glow 2s ease-in-out infinite alternate'
-              }} />
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <Typography variant="h6" sx={{
                 fontWeight: 'bold',
                 color: 'primary.main',
@@ -234,67 +433,82 @@ const handleSubmit = async (e: React.FormEvent) => {
                 Code Tutor AI
               </Typography>
             </Box>
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <Button color="inherit" onClick={handleSignIn}>
-                Sign In
-              </Button>
-              <Button variant="contained" onClick={handleStartNow}>
-                Start Now
-              </Button>
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+              {user && !requiresVerification ? (
+                // Authenticated user - show name and continue button
+                <>
+                  <Typography variant="body1" sx={{ color: 'white' }}>
+                    Welcome back, {user.username}!
+                  </Typography>
+                  <Button variant="contained" onClick={handleContinueLearning}>
+                    Continue Learning
+                  </Button>
+                </>
+              ) : (
+                // Non-authenticated user - show sign in buttons
+                <>
+                  <Button color="inherit" onClick={handleSignIn}>
+                    Sign In
+                  </Button>
+                  <Button variant="contained" onClick={handleStartNow}>
+                    Start Now
+                  </Button>
+                </>
+              )}
             </Box>
           </Toolbar>
         </Container>
       </AppBar>
 
       {/* Hero Section */}
-    <Box
-      sx={{
-        background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)',
-        color: 'white',
-        py: 12,
-        position: 'relative',
-        overflow: 'hidden',
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'radial-gradient(circle at 50% 50%, rgba(144, 202, 249, 0.05) 0%, transparent 70%)',
-        },
-        '@keyframes float': {
-          '0%, 100%': { transform: 'translateY(0px)' },
-          '50%': { transform: 'translateY(-10px)' },
-        },
-        '@keyframes slideInLeft': {
-          '0%': { transform: 'translateX(-50px)', opacity: 0 },
-          '100%': { transform: 'translateX(0)', opacity: 1 },
-        },
-        '@keyframes glow': {
-          '0%': { filter: 'drop-shadow(0 0 5px rgba(144, 202, 249, 0.5))' },
-          '100%': { filter: 'drop-shadow(0 0 15px rgba(144, 202, 249, 0.8))' },
-        },
-        '@keyframes fadeInUp': {
-          '0%': { transform: 'translateY(30px)', opacity: 0 },
-          '100%': { transform: 'translateY(0)', opacity: 1 },
-        },
-        '@keyframes pulse': {
-          '0%': { boxShadow: '0 0 0 0 rgba(144, 202, 249, 0.4)' },
-          '70%': { boxShadow: '0 0 0 10px rgba(144, 202, 249, 0)' },
-          '100%': { boxShadow: '0 0 0 0 rgba(144, 202, 249, 0)' },
-        },
-        '@keyframes bounce': {
-          '0%, 20%, 50%, 80%, 100%': { transform: 'translateY(0)' },
-          '40%': { transform: 'translateY(-10px)' },
-          '60%': { transform: 'translateY(-5px)' },
-        },
-        '@keyframes modalFadeIn': {
-          '0%': { opacity: 0, transform: 'scale(0.8) translateY(-20px)' },
-          '100%': { opacity: 1, transform: 'scale(1) translateY(0)' },
-        },
-      }}
-    >
+      <Box
+        sx={{
+          background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)',
+          color: 'white',
+          py: 12,
+          position: 'relative',
+          overflow: 'hidden',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'radial-gradient(circle at 50% 50%, rgba(144, 202, 249, 0.05) 0%, transparent 70%)',
+          },
+          '@keyframes float': {
+            '0%, 100%': { transform: 'translateY(0px)' },
+            '50%': { transform: 'translateY(-10px)' },
+          },
+          '@keyframes slideInLeft': {
+            '0%': { transform: 'translateX(-50px)', opacity: 0 },
+            '100%': { transform: 'translateX(0)', opacity: 1 },
+          },
+          '@keyframes glow': {
+            '0%': { filter: 'drop-shadow(0 0 5px rgba(144, 202, 249, 0.5))' },
+            '100%': { filter: 'drop-shadow(0 0 15px rgba(144, 202, 249, 0.8))' },
+          },
+          '@keyframes fadeInUp': {
+            '0%': { transform: 'translateY(30px)', opacity: 0 },
+            '100%': { transform: 'translateY(0)', opacity: 1 },
+          },
+          '@keyframes pulse': {
+            '0%': { boxShadow: '0 0 0 0 rgba(144, 202, 249, 0.4)' },
+            '70%': { boxShadow: '0 0 0 10px rgba(144, 202, 249, 0)' },
+            '100%': { boxShadow: '0 0 0 0 rgba(144, 202, 249, 0)' },
+          },
+          '@keyframes bounce': {
+            '0%, 20%, 50%, 80%, 100%': { transform: 'translateY(0)' },
+            '40%': { transform: 'translateY(-10px)' },
+            '60%': { transform: 'translateY(-5px)' },
+          },
+          '@keyframes modalFadeIn': {
+            '0%': { opacity: 0, transform: 'scale(0.8) translateY(-20px)' },
+            '100%': { opacity: 1, transform: 'scale(1) translateY(0)' },
+          },
+        }}
+      >
         <Container maxWidth="lg">
           <Grid container spacing={4} alignItems="center">
             <Grid item xs={12} md={6} sx={{
@@ -312,46 +526,26 @@ const handleSubmit = async (e: React.FormEvent) => {
                 and real-time code compilation. Join thousands of developers on their coding journey.
               </Typography>
               <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-              <Button
-                variant="contained"
-                size="large"
-                onClick={handleStartNow}
-                sx={{
-                  backgroundColor: '#90caf9',
-                  color: '#0a0a0a',
-                  '&:hover': {
-                    backgroundColor: '#64b5f6',
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 8px 25px rgba(144, 202, 249, 0.3)',
-                  },
-                  px: 4,
-                  py: 1.5,
-                  animation: 'pulse 2s infinite',
-                }}
-                endIcon={<ArrowForward />}
-              >
-                Start Learning Now
-              </Button>
-              <Button
-                variant="outlined"
-                size="large"
-                sx={{
-                  borderColor: '#90caf9',
-                  color: '#90caf9',
-                  display: "none",
-                  '&:hover': {
-                    borderColor: '#64b5f6',
-                    backgroundColor: 'rgba(144, 202, 249, 0.1)',
-                    transform: 'translateY(-2px)',
-                    display:"none",
-                  },
-                  px: 4,
-                  py: 1.5,
-                  ml: 2,
-                }}
-              >
-                
-              </Button>
+                <Button
+                  variant="contained"
+                  size="large"
+                  onClick={handleStartNow}
+                  sx={{
+                    backgroundColor: '#90caf9',
+                    color: '#0a0a0a',
+                    '&:hover': {
+                      backgroundColor: '#64b5f6',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 8px 25px rgba(144, 202, 249, 0.3)',
+                    },
+                    px: 4,
+                    py: 1.5,
+                    animation: 'pulse 2s infinite',
+                  }}
+                  endIcon={<ArrowForward />}
+                >
+                  Start Learning Now
+                </Button>
               </Box>
             </Grid>
             <Grid item xs={12} md={6} sx={{
@@ -509,7 +703,6 @@ const handleSubmit = async (e: React.FormEvent) => {
           </Grid>
         </Container>
       </Box>
-
 
       {/* Pricing Section */}
       <Box sx={{
@@ -698,6 +891,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                           transform: 'translateY(-2px)',
                         }
                       }}
+                      onClick={plan.name === 'Starter' ? handleStartNow : undefined}
                     >
                       {plan.buttonText}
                     </Button>
@@ -811,235 +1005,311 @@ const handleSubmit = async (e: React.FormEvent) => {
         <Paper
           sx={{
             width: '100%',
-            maxWidth: 400,
-            p: 2.5,
+            maxWidth: 420,
+            p: 3,
             borderRadius: 3,
-            position: 'relative',
             backgroundColor: '#1a1a1a',
             border: '1px solid rgba(144, 202, 249, 0.2)',
-            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
-            animation: 'modalFadeIn 0.3s ease-out',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
             maxHeight: '90vh',
             overflowY: 'auto',
           }}
         >
-          <IconButton
-            onClick={handleCloseModal}
-            sx={{ position: 'absolute', top: 8, right: 8 }}
-          >
+          <IconButton onClick={handleCloseModal} sx={{ position: 'absolute', top: 8, right: 8 }}>
             <Close />
           </IconButton>
 
-          <Box sx={{ textAlign: 'center', mb: 2 }}>
-            <Code sx={{
-              fontSize: 36,
-              color: 'primary.main',
-              mb: 1,
-              animation: 'glow 2s ease-in-out infinite alternate'
-            }} />
-            <Typography variant="h5" id="auth-modal-title" sx={{
-              fontWeight: 'bold',
-              color: 'white',
-              mb: 0.5,
-              fontSize: '1.5rem'
-            }}>
-              {isSignUp ? 'Join Code Tutor AI' : 'Welcome Back'}
+          <Box sx={{ textAlign: 'center', mb: 3 }}>
+            <Code sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
+            <Typography variant="h5" sx={{ fontWeight: 'bold', color: 'white' }}>
+              {isForgotPassword
+                ? (isOtpSent ? (isOtpVerified ? 'Reset Password' : 'Verify OTP') : 'Reset Password')
+                : isSignUp ? 'Join Code Tutor AI' : 'Welcome Back'}
             </Typography>
-            <Typography variant="body2" sx={{ color: 'rgba(176, 176, 176, 0.8)', fontSize: '0.8rem' }}>
-              {isSignUp ? 'Create your account to start learning' : 'Sign in to continue your learning journey'}
+            <Typography variant="body2" sx={{ color: 'rgba(176,176,176,0.8)', mt: 1 }}>
+              {isForgotPassword
+                ? (isOtpSent 
+                  ? (isOtpVerified 
+                    ? 'Enter your new password'
+                    : 'Enter the 6-digit OTP sent to your email')
+                  : 'Enter your email to receive a reset code')
+                : isSignUp ? 'Create your account to start learning' : 'Sign in to continue your journey'}
             </Typography>
           </Box>
 
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
+          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+          {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
+
+          {/* Google Login (only for sign in/up) */}
+          {!isForgotPassword && (
+            <>
+              <Button
+                fullWidth
+                variant="outlined"
+                onClick={handleGoogleLogin}
+                startIcon={<GoogleIcon sx={{ color: '#4285f4' }} />}
+                sx={{ mb: 2, py: 1.5, borderColor: '#4285f4', color: '#4285f4' }}
+              >
+                Continue with Google
+              </Button>
+              <Divider sx={{ mb: 2 }}>or</Divider>
+            </>
           )}
 
-          <Button
-            fullWidth
-            variant="outlined"
-            size="medium"
-            onClick={handleGoogleLogin}
-            sx={{
-              mb: 2,
-              py: 1,
-              borderColor: '#4285f4',
-              color: '#4285f4',
-              '&:hover': {
-                borderColor: '#3367d6',
-                backgroundColor: 'rgba(66, 133, 244, 0.04)',
-                transform: 'translateY(-2px)',
-              },
-              transition: 'all 0.3s ease',
-            }}
-            startIcon={
-              <GoogleIcon sx={{ color: '#4285f4' }} />
-            }
-          >
-            Continue with Google
-          </Button>
-
-          <Divider sx={{ mb: 2 }}>
-            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-              or
-            </Typography>
-          </Divider>
-     
-          <Box component="form" onSubmit={handleSubmit}>
-            {isSignUp && (
+          {/* Forgot Password Flow */}
+          {isForgotPassword ? (
+            <Box component="form" onSubmit={
+              !isOtpSent ? handleForgotPassword :
+              !isOtpVerified ? handleVerifyOtp :
+              handleResetPassword
+            }>
               <TextField
                 fullWidth
-                label="Username"
-                name="username"
-                type="text"
-                value={formData.username}
+                label="Email"
+                name="email"
+                type="email"
+                value={formData.email}
                 onChange={handleInputChange}
                 required
-                size="small"
-                sx={{ mb: 1.5 }}
+                disabled={isOtpSent}
+                sx={{ mb: 2 }}
                 InputProps={{
-                  startAdornment: <Person sx={{ mr: 1, color: 'action.active', fontSize: '1.2rem' }} />,
+                  startAdornment: <Email sx={{ mr: 1, color: 'action.active' }} />,
                 }}
               />
-            )}
 
-            <TextField
-              fullWidth
-              label="Email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              required
-              size="small"
-              sx={{ mb: 1.5 }}
-              InputProps={{
-                startAdornment: <Email sx={{ mr: 1, color: 'action.active', fontSize: '1.2rem' }} />,
-              }}
-            />
+              {isOtpSent && !isOtpVerified && (
+                <>
+                  <TextField
+                    fullWidth
+                    label="Enter 6-digit OTP"
+                    name="otp"
+                    value={formData.otp}
+                    onChange={handleInputChange}
+                    required
+                    inputProps={{ maxLength: 6, pattern: '[0-9]*' }}
+                    sx={{ mb: 2 }}
+                  />
+                  <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      fullWidth
+                      disabled={isLoading}
+                    >
+                      {isLoading ? <CircularProgress size={24} /> : 'Verify OTP'}
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      disabled={otpResendTimer > 0 || isLoading}
+                      onClick={handleResendOtp}
+                      sx={{ minWidth: 120 }}
+                    >
+                      Resend {otpResendTimer > 0 ? `(${otpResendTimer}s)` : ''}
+                    </Button>
+                  </Box>
+                </>
+              )}
 
-<TextField
-  fullWidth
-  label="Password"
-  name="password"
-  type={showPassword ? 'text' : 'password'}
-  value={formData.password}
-  onChange={handleInputChange}
-  required
-  size="small"
-  sx={{ mb: isSignUp ? 1.5 : 2 }}
-  InputProps={{
-    startAdornment: <Lock sx={{ mr: 1, color: 'action.active', fontSize: '1.2rem' }} />,
-    endAdornment: (
-      <IconButton
-        aria-label="toggle password visibility"
-        onClick={() => setShowPassword(!showPassword)}
-        edge="end"
-        sx={{ color: 'action.active' }}
-      >
-        {showPassword ? <VisibilityOff /> : <Visibility />}
-      </IconButton>
-    ),
-  }}
-/>
+              {isOtpSent && isOtpVerified && (
+                <>
+                  <TextField
+                    fullWidth
+                    label="New Password"
+                    name="newPassword"
+                    type={showNewPassword ? 'text' : 'password'}
+                    value={formData.newPassword}
+                    onChange={handleInputChange}
+                    required
+                    sx={{ mb: 2 }}
+                    InputProps={{
+                      startAdornment: <Lock sx={{ mr: 1, color: 'action.active' }} />,
+                      endAdornment: (
+                        <IconButton onClick={() => setShowNewPassword(!showNewPassword)}>
+                          {showNewPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      ),
+                    }}
+                    helperText="At least 8 characters long"
+                  />
 
-{isSignUp && (
-  <TextField
-    fullWidth
-    label="Confirm Password"
-    name="confirmPassword"
-    type={showConfirmPassword ? 'text' : 'password'}
-    value={formData.confirmPassword}
-    onChange={handleInputChange}
-    required
-    size="small"
-    sx={{ mb: 2 }}
-    InputProps={{
-      startAdornment: <Lock sx={{ mr: 1, color: 'action.active', fontSize: '1.2rem' }} />,
-      endAdornment: (
-        <IconButton
-          aria-label="toggle confirm password visibility"
-          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-          edge="end"
-          sx={{ color: 'action.active' }}
-        >
-          {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-        </IconButton>
-      ),
-    }}
-  />
-)}
-{isSignUp && (
-  <FormControlLabel
-    control={
-      <Checkbox
-        checked={acceptPolicy}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAcceptPolicy(e.target.checked)}
-        color="primary"
-        sx={{
-          color: 'rgba(144, 202, 249, 0.5)',
-          '&.Mui-checked': {
-            color: '#90caf9',
-          },
-        }}
-      />
-    }
-    label={
-      <Typography variant="body2" sx={{ fontSize: '0.8rem', color: 'text.secondary' }}>
-        I agree to the{' '}
-        <span style={{ color: '#90caf9', textDecoration: 'underline' }}>
-          Terms of Service
-        </span>{' '}
-        and{' '}
-        <span style={{ color: '#90caf9', textDecoration: 'underline' }}>
-          Privacy Policy
-        </span>
-      </Typography>
-    }
-    sx={{ 
-      mb: 1, 
-      alignItems: 'center',
-      '& .MuiFormControlLabel-label': {
-        lineHeight: 1.2,
-      }
-    }}
-  />
-)}
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              size="medium"
-              disabled={isLoading}
-              sx={{
-                mb: 1.5,
-                py: 1,
-                backgroundColor: '#90caf9',
-                color: '#0a0a0a',
-                '&:hover': {
-                  backgroundColor: '#64b5f6',
-                  transform: 'translateY(-2px)',
-                },
-                transition: 'all 0.3s ease',
-              }}
-              startIcon={isLoading ? <CircularProgress size={18} /> : null}
-            >
-              {isLoading ? 'Please wait...' : (isSignUp ? 'Create Account' : 'Sign In')}
-            </Button>
-          </Box>
+                  <TextField
+                    fullWidth
+                    label="Confirm New Password"
+                    name="confirmNewPassword"
+                    type={showConfirmNewPassword ? 'text' : 'password'}
+                    value={formData.confirmNewPassword}
+                    onChange={handleInputChange}
+                    required
+                    sx={{ mb: 2 }}
+                    InputProps={{
+                      startAdornment: <Lock sx={{ mr: 1, color: 'action.active' }} />,
+                      endAdornment: (
+                        <IconButton onClick={() => setShowConfirmNewPassword(!showConfirmNewPassword)}>
+                          {showConfirmNewPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      ),
+                    }}
+                  />
 
-          <Box sx={{ textAlign: 'center', mt: 1 }}>
-            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
-              {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+                  <Button
+                    type="submit"
+                    fullWidth
+                    variant="contained"
+                    disabled={isLoading}
+                    sx={{ py: 1.5, backgroundColor: '#90caf9', color: '#0a0a0a' }}
+                  >
+                    {isLoading ? <CircularProgress size={24} /> : 'Reset Password'}
+                  </Button>
+                </>
+              )}
+
+              {!isOtpSent && (
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  disabled={isLoading}
+                  sx={{ py: 1.5, backgroundColor: '#90caf9', color: '#0a0a0a', mb: 2 }}
+                >
+                  {isLoading ? <CircularProgress size={24} /> : 'Send OTP'}
+                </Button>
+              )}
+
               <Button
-                onClick={() => setIsSignUp(!isSignUp)}
-                sx={{ p: 0, minWidth: 'auto', textTransform: 'none', fontSize: '0.8rem' }}
+                fullWidth
+                onClick={() => {
+                  setIsForgotPassword(false);
+                  setIsOtpSent(false);
+                  setIsOtpVerified(false);
+                  setError('');
+                  setSuccess('');
+                }}
+                sx={{ mt: 1 }}
               >
-                {isSignUp ? 'Sign In' : 'Sign Up'}
+                Back to Sign In
               </Button>
-            </Typography>
-          </Box>
+            </Box>
+          ) : (
+            /* Regular Sign Up / Sign In Form */
+            <Box component="form" onSubmit={handleSubmit}>
+              {isSignUp && (
+                <TextField
+                  fullWidth
+                  label="Username"
+                  name="username"
+                  value={formData.username}
+                  onChange={handleInputChange}
+                  required
+                  sx={{ mb: 2 }}
+                  InputProps={{
+                    startAdornment: <Person sx={{ mr: 1, color: 'action.active' }} />,
+                  }}
+                />
+              )}
+
+              <TextField
+                fullWidth
+                label="Email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                required
+                sx={{ mb: 2 }}
+                InputProps={{
+                  startAdornment: <Email sx={{ mr: 1, color: 'action.active' }} />,
+                }}
+              />
+
+              <TextField
+                fullWidth
+                label="Password"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                value={formData.password}
+                onChange={handleInputChange}
+                required
+                sx={{ mb: isSignUp ? 1 : 2 }}
+                InputProps={{
+                  startAdornment: <Lock sx={{ mr: 1, color: 'action.active' }} />,
+                  endAdornment: (
+                    <IconButton onClick={() => setShowPassword(!showPassword)}>
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  ),
+                }}
+                helperText={isSignUp ? "At least 8 characters long" : ""}
+              />
+
+              {isSignUp && (
+                <>
+                  <TextField
+                    fullWidth
+                    label="Confirm Password"
+                    name="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={formData.confirmPassword}
+                    onChange={handleInputChange}
+                    required
+                    sx={{ mb: 2 }}
+                    InputProps={{
+                      startAdornment: <Lock sx={{ mr: 1, color: 'action.active' }} />,
+                      endAdornment: (
+                        <IconButton onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                          {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      ),
+                    }}
+                  />
+
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={acceptPolicy}
+                        onChange={e => setAcceptPolicy(e.target.checked)}
+                        color="primary"
+                      />
+                    }
+                    label={
+                      <Typography variant="body2" sx={{ fontSize: '0.8rem', color: 'text.secondary' }}>
+                        I agree to the <span style={{ color: '#90caf9' }}>Terms of Service</span> and{' '}
+                        <span style={{ color: '#90caf9' }}>Privacy Policy</span>
+                      </Typography>
+                    }
+                    sx={{ mb: 2 }}
+                  />
+                </>
+              )}
+
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                disabled={isLoading}
+                sx={{ py: 1.5, mb: 2, backgroundColor: '#90caf9', color: '#0a0a0a' }}
+              >
+                {isLoading ? <CircularProgress size={24} /> : (isSignUp ? 'Create Account' : 'Sign In')}
+              </Button>
+
+              {!isSignUp && (
+                <Button
+                  fullWidth
+                  onClick={() => setIsForgotPassword(true)}
+                  sx={{ mb: 2, textTransform: 'none' }}
+                >
+                  Forgot Password?
+                </Button>
+              )}
+
+              <Typography variant="body2" align="center" color="text.secondary">
+                {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+                <Button onClick={() => setIsSignUp(!isSignUp)} sx={{ textTransform: 'none' }}>
+                  {isSignUp ? 'Sign In' : 'Sign Up'}
+                </Button>
+              </Typography>
+            </Box>
+          )}
         </Paper>
       </Modal>
 
@@ -1050,14 +1320,8 @@ const handleSubmit = async (e: React.FormEvent) => {
           setAuthModalOpen(false);
         }}
         onSuccess={() => {
-          // After successful verification, redirect to dashboard
           setAuthModalOpen(false);
-          setIsSignUp(false);
-          setError('');
-          // Small delay to ensure token is set in state
-          setTimeout(() => {
-            navigate('/dashboard');
-          }, 200);
+          setTimeout(() => navigate('/dashboard'), 200);
         }}
       />
     </Box>

@@ -42,8 +42,6 @@ const Layout: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
   const { progress } = useSelector((state: RootState) => state.user);
 
-  const drawerWidth = 240;
-
   const [mobileOpen, setMobileOpen] = React.useState(false);
 
   const styles = {
@@ -78,6 +76,13 @@ const Layout: React.FC = () => {
     setMobileOpen(!mobileOpen);
   };
 
+  const handleLogoClick = () => {
+    // Navigate to home page
+    navigate('/');
+    
+    // Re-initialize auth to update login status
+    dispatch(initializeAuth());
+  };
 
   const menuItems = [
     { text: 'Dashboard', icon: <Dashboard />, path: '' },
@@ -101,11 +106,21 @@ const Layout: React.FC = () => {
         background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
         borderBottom: '1px solid rgba(144, 202, 249, 0.1)',
       }}>
-        <Typography variant="h6" noWrap component="div" sx={{
-          color: 'primary.main',
-          fontWeight: 'bold',
-          textShadow: '0 0 10px rgba(144, 202, 249, 0.5)'
-        }}>
+        <Typography 
+          variant="h6" 
+          noWrap 
+          component="div" 
+          sx={{
+            color: 'primary.main',
+            fontWeight: 'bold',
+            textShadow: '0 0 10px rgba(144, 202, 249, 0.5)',
+            cursor: 'pointer',
+            '&:hover': {
+              opacity: 0.8,
+            }
+          }}
+          onClick={handleLogoClick}
+        >
           Code Tutor AI
         </Typography>
       </Toolbar>
@@ -188,7 +203,7 @@ const Layout: React.FC = () => {
             </Typography>
 
             <Avatar
-              src={user?.avatar ? `${process.env.REACT_APP_API_URL || 'https://tgeazxxujp.ap-south-1.awsapprunner.com/'}/uploads/avatars/${user.avatar}` : undefined}
+              src={user?.avatar ? `${process.env.REACT_APP_API_URL || 'http://127.0.0.1:5000'}/uploads/avatars/${user.avatar}` : undefined}
               sx={{ 
                 width: 32, 
                 height: 32,

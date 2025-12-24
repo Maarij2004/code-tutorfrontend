@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { setCurrentCode } from '../store/slices/codeSlice'; // Add setCurrentCode
+// ... existing imports ...
 import {
   Grid,
   Card,
@@ -3838,16 +3840,25 @@ console.log(localStorage.getItem("homework"));`,
           )}
         </DialogContent>
         <DialogActions sx={{ p: 3, gap: 2 }}>
-          <Button
-            variant="outlined"
-            startIcon={<CodeIcon />}
-            onClick={() => {
-              navigate('/dashboard/editor');
-              setTutorialDialog(false);
-            }}
-          >
-            Open Code Editor
-          </Button>
+      <Button
+        variant="outlined"
+        startIcon={<CodeIcon />}
+        onClick={() => {
+          // Extract tutorial code and set it in the editor
+          if (selectedTutorial?.examples && selectedTutorial.examples.length > 0) {
+            const tutorialCode = selectedTutorial.examples
+              .map((example: any) => example.code)
+              .join('\n\n// Next Example:\n');
+            
+            dispatch(setCurrentCode(tutorialCode));
+          }
+          
+          navigate('/dashboard/editor');
+          setTutorialDialog(false);
+        }}
+      >
+        Open Code Editor
+      </Button>
           {!isTutorialCompleted(selectedTutorial?.id) && (
             <Button
               variant="contained"
