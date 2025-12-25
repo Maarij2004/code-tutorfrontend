@@ -3687,7 +3687,7 @@ const Activities: React.FC = () => {
     setCompletedActivities(prev => [...prev, activityId]);
     setShowConfetti(true);
     setTimeout(() => setShowConfetti(false), 3000);
-    
+    setSelectedActivity(null);
     // Find the activity to get its points
     const activity = activities.find(a => a.id === activityId);
     if (activity) {
