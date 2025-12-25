@@ -61,17 +61,19 @@ const Dashboard: React.FC = () => {
   const availableChallenges = challenges.filter(c => !progress?.completedChallenges?.includes(c.id)).slice(0, 3);
 
   // Onboarding tour state
-  const tourSteps = useMemo(() => [
-    { id: 'dashboard', title: 'Dashboard overview', desc: 'Track XP, streak, achievements, and quick links to what is next.' },
-    { id: 'ask-tutor', title: 'Ask Tutor', desc: 'Chat with the AI tutor for quick explanations, code snippets, or debugging help.' },
-    { id: 'tutorials', title: 'Tutorials', desc: 'Read guided lessons to learn concepts before tackling challenges.' },
-    { id: 'game-learning', title: 'Game Learning', desc: 'Learn with interactive game-style content to reinforce concepts.' },
-    { id: 'editor', title: 'Code Editor', desc: 'Open the built-in editor to practice or solve challenges in one place.' },
-    { id: 'challenges', title: 'Challenges', desc: 'Work through progressive challenges by language with XP rewards and completion tracking.' },
-    { id: 'leaderboard', title: 'Leaderboard', desc: 'See top performers and compare progress with other learners.' },
-    { id: 'notes', title: 'Notes', desc: 'Browse curated concept bullets and add/edit your own notes per language.' },
-    { id: 'profile', title: 'Profile', desc: 'Manage your info, avatar, and view your achievements and stats.' },
-  ], []);
+// Update the tourSteps in Dashboard.tsx to include activities:
+const tourSteps = useMemo(() => [
+  { id: 'dashboard', title: 'Dashboard overview', desc: 'Track XP, streak, achievements, and quick links to what is next.' },
+  { id: 'activities', title: 'Interactive Activities', desc: 'Play fun educational games and activities to learn programming concepts through interactive challenges.' },
+  { id: 'ask-tutor', title: 'Ask Tutor', desc: 'Chat with the AI tutor for quick explanations, code snippets, or debugging help.' },
+  { id: 'tutorials', title: 'Tutorials', desc: 'Read guided lessons to learn concepts before tackling challenges.' },
+  { id: 'game-learning', title: 'Game Learning', desc: 'Learn with interactive game-style content to reinforce concepts.' },
+  { id: 'editor', title: 'Code Editor', desc: 'Open the built-in editor to practice or solve challenges in one place.' },
+  { id: 'challenges', title: 'Challenges', desc: 'Work through progressive challenges by language with XP rewards and completion tracking.' },
+  { id: 'leaderboard', title: 'Leaderboard', desc: 'See top performers and compare progress with other learners.' },
+  { id: 'notes', title: 'Notes', desc: 'Browse curated concept bullets and add/edit your own notes per language.' },
+  { id: 'profile', title: 'Profile', desc: 'Manage your info, avatar, and view your achievements and stats.' },
+], []);
   const [showTour, setShowTour] = useState(false);
   const [tourStep, setTourStep] = useState(0);
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
