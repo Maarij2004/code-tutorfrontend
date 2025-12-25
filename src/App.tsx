@@ -15,6 +15,8 @@ import Tutorials from './pages/Tutorials';
 import GameLearning from './pages/GameLearning';
 import Leaderboard from './pages/Leaderboard';
 import Profile from './pages/Profile';
+import Activities from './pages/Activities'; // Add this import
+
 import Notes from './pages/Notes';
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -109,6 +111,7 @@ function App() {
             <Route path="/dashboard" element={<Layout />}>
               <Route index element={<Dashboard />} />
               <Route path="ask-tutor" element={<AskTutor />} />
+              <Route path="activities" element={<Activities />} /> {/* Add Activities route */}
               <Route path="tutorials" element={<Tutorials />} />
               <Route path="game-learning" element={<GameLearning />} />
               <Route path="editor" element={<CodeEditor />} />

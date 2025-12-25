@@ -28,6 +28,7 @@ import {
   SmartToy,
   Games,
   Notes as NotesIcon,
+  Extension,
 } from '@mui/icons-material';
 import { RootState, useAppDispatch } from '../store';
 import { initializeAuth } from '../store/slices/authSlice';
@@ -86,6 +87,7 @@ const Layout: React.FC = () => {
 
   const menuItems = [
     { text: 'Dashboard', icon: <Dashboard />, path: '' },
+    { text: 'Activities', icon: <Extension />, path: 'activities' }, 
     { text: 'Ask Tutor', icon: <SmartToy />, path: 'ask-tutor' },
     { text: 'Tutorials', icon: <MenuBook />, path: 'tutorials' },
     { text: 'Game Learning', icon: <Games />, path: 'game-learning' },
