@@ -182,7 +182,7 @@ const RobotMovementGame: React.FC<{ level: number }> = ({ level }) => {
           variant="contained" 
           onClick={() => handleMove('forward')}
           disabled={isMoving}
-          startIcon="⬆️"
+          startIcon=""
         >
           Forward
         </Button>
@@ -190,23 +190,23 @@ const RobotMovementGame: React.FC<{ level: number }> = ({ level }) => {
           variant="contained" 
           onClick={() => handleMove('backward')}
           disabled={isMoving}
-          startIcon="⬇️"
+          startIcon=""
         >
           Backward
         </Button>
         <Button 
           variant="contained" 
-          onClick={() => handleMove('left')}
+          onClick={() => handleMove('down')}
           disabled={isMoving}
-          startIcon="⬅️"
+          startIcon=""
         >
           Left
         </Button>
         <Button 
           variant="contained" 
-          onClick={() => handleMove('right')}
+          onClick={() => handleMove('up')}
           disabled={isMoving}
-          startIcon="➡️"
+          startIcon=""
         >
           Right
         </Button>
