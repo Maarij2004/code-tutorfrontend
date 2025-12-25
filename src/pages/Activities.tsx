@@ -143,104 +143,183 @@ const GameContainer = styled(Paper)({
     animation: `${moveLeft} 20s linear infinite`,
   },
 });
-// Game Components
+// Replace the RobotMovementGame with this simplified version:
 const RobotMovementGame: React.FC<{ level: number }> = ({ level }) => {
-  const [position, setPosition] = useState(0);
-  const [commands, setCommands] = useState<string[]>(['forward', 'right', 'forward', 'left']);
-  const [currentCommand, setCurrentCommand] = useState(0);
-  const [isMoving, setIsMoving] = useState(false);
+  const [playerPos, setPlayerPos] = useState(50); // Start in middle
+  const [goalPos, setGoalPos] = useState(200); // Goal position
+  const [gameWon, setGameWon] = useState(false);
+  const [moves, setMoves] = useState(0);
 
-  const handleMove = (direction: string) => {
-    setCommands([...commands, direction]);
+  // Generate random goal position on game start/reset
+  useEffect(() => {
+    setGoalPos(Math.floor(Math.random() * 300) + 100); // Random position between 100-400
+    setPlayerPos(50);
+    setGameWon(false);
+    setMoves(0);
+  }, [level]);
+
+  const moveLeft = () => {
+    if (gameWon) return;
+    
+    setPlayerPos(prev => {
+      const newPos = Math.max(0, prev - 20); // Move left by 20px, don't go below 0
+      setMoves(prevMoves => prevMoves + 1);
+      
+      // Check if reached goal
+      if (Math.abs(newPos - goalPos) < 25) { // Within 25px of goal
+        setGameWon(true);
+      }
+      
+      return newPos;
+    });
   };
 
-  const executeCommands = () => {
-    setIsMoving(true);
-    let step = 0;
-    const interval = setInterval(() => {
-      if (step < commands.length) {
-        const cmd = commands[step];
-        if (cmd === 'forward') setPosition(prev => prev + 50);
-        if (cmd === 'backward') setPosition(prev => prev - 50);
-        setCurrentCommand(step);
-        step++;
-      } else {
-        clearInterval(interval);
-        setIsMoving(false);
+  const moveRight = () => {
+    if (gameWon) return;
+    
+    setPlayerPos(prev => {
+      const newPos = Math.min(400, prev + 20); // Move right by 20px, don't go above 400
+      setMoves(prevMoves => prevMoves + 1);
+      
+      // Check if reached goal
+      if (Math.abs(newPos - goalPos) < 25) { // Within 25px of goal
+        setGameWon(true);
       }
-    }, 1000);
+      
+      return newPos;
+    });
+  };
+
+  const resetGame = () => {
+    setGoalPos(Math.floor(Math.random() * 300) + 100);
+    setPlayerPos(50);
+    setGameWon(false);
+    setMoves(0);
   };
 
   return (
     <GameContainer elevation={6}>
-      <Typography variant="h5" gutterBottom sx={{ color: 'white', mb: 3 }}>
+      <Typography variant="h5" gutterBottom sx={{ color: 'white' }}>
         🤖 Robot Movement Challenge
       </Typography>
       
+      <Typography variant="h6" sx={{ color: 'white', mb: 2 }}>
+        Moves: {moves} | Use Left/Right to reach the goal!
+      </Typography>
+
+      {/* Game Area */}
+      <Box sx={{ 
+        position: 'relative', 
+        width: '100%', 
+        height: '120px', 
+        backgroundColor: '#333', 
+        borderRadius: '10px', 
+        mb: 3,
+        overflow: 'hidden'
+      }}>
+        {/* Goal */}
+        <Box sx={{ 
+          position: 'absolute', 
+          left: `${goalPos}px`, 
+          top: '20px',
+          width: '30px',
+          height: '30px',
+          backgroundColor: '#FFD700',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '16px',
+          animation: `${pulse} 1s infinite`,
+          zIndex: 2
+        }}>
+          🏁
+        </Box>
+
+        {/* Player Robot */}
+        <Box sx={{ 
+          position: 'absolute', 
+          left: `${playerPos}px`, 
+          bottom: '10px',
+          transition: 'left 0.3s ease',
+          zIndex: 3
+        }}>
+          <Box sx={{
+            width: '40px',
+            height: '50px',
+            backgroundColor: gameWon ? '#4caf50' : '#666',
+            borderRadius: '8px',
+            position: 'relative',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '20px',
+            animation: gameWon ? `${bounce} 1s infinite` : 'none',
+          }}>
+            🤖
+          </Box>
+        </Box>
+
+        {/* Win message overlay */}
+        {gameWon && (
+          <Box sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(76, 175, 80, 0.9)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 4
+          }}>
+            <Typography variant="h4" sx={{ color: 'white', fontWeight: 'bold' }}>
+              🎉 You Won! 🎉
+            </Typography>
+          </Box>
+        )}
+      </Box>
+
+      {/* Controls */}
       <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
         <Button 
           variant="contained" 
-          onClick={() => handleMove('forward')}
-          disabled={isMoving}
-          startIcon=""
-        >
-          Forward
-        </Button>
-        <Button 
-          variant="contained" 
-          onClick={() => handleMove('backward')}
-          disabled={isMoving}
-          startIcon=""
-        >
-          Backward
-        </Button>
-        <Button 
-          variant="contained" 
-          onClick={() => handleMove('down')}
-          disabled={isMoving}
-          startIcon=""
+          onClick={moveLeft}
+          disabled={gameWon}
+          startIcon="⬅️"
+          size="large"
         >
           Left
         </Button>
         <Button 
           variant="contained" 
-          onClick={() => handleMove('up')}
-          disabled={isMoving}
-          startIcon=""
+          onClick={moveRight}
+          disabled={gameWon}
+          startIcon="➡️"
+          size="large"
         >
           Right
         </Button>
       </Box>
 
-      <Box sx={{ position: 'relative', width: '100%', height: '100px', backgroundColor: '#333', borderRadius: '10px', mb: 2 }}>
-        <Box sx={{ position: 'absolute', left: `${position}px`, transition: 'left 1s ease' }}>
-          <Robot />
-        </Box>
-        <Box sx={{ position: 'absolute', right: '50px', top: '25px' }}>
-          <StarShape />
-        </Box>
-      </Box>
-
-      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 3 }}>
-        {commands.map((cmd, idx) => (
-          <Chip
-            key={idx}
-            label={cmd}
-            color={idx === currentCommand && isMoving ? 'primary' : 'default'}
-            sx={{ animation: idx === currentCommand && isMoving ? `${pulse} 0.5s infinite` : 'none' }}
-          />
-        ))}
-      </Box>
-
+      {/* Reset Button */}
       <Button 
-        variant="contained" 
-        color="success" 
-        onClick={executeCommands}
-        disabled={isMoving}
-        startIcon={<PlayArrow />}
+        variant="outlined" 
+        onClick={resetGame}
+        sx={{ color: 'white', borderColor: '#666' }}
       >
-        Execute Commands
+        New Game
       </Button>
+
+      {/* Win Message */}
+      {gameWon && (
+        <Box sx={{ mt: 2, textAlign: 'center' }}>
+          <Typography variant="h6" sx={{ color: '#4caf50' }}>
+            Congratulations! You reached the goal in {moves} moves!
+          </Typography>
+        </Box>
+      )}
     </GameContainer>
   );
 };
