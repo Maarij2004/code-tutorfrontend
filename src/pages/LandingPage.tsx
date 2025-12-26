@@ -860,7 +860,7 @@ const LandingPage: React.FC = () => {
                       letterSpacing: 1,
                       animation: 'pulse 2s infinite'
                     }}>
-                      Most Popular
+    
                     </Box>
                   )}
 
