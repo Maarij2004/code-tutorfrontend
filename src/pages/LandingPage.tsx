@@ -75,6 +75,7 @@ const LandingPage: React.FC = () => {
   const handleContinueLearning = () => {
     navigate('/dashboard');
   };
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
@@ -114,6 +115,47 @@ const LandingPage: React.FC = () => {
     setAuthModalOpen(true);
     setIsSignUp(false);
     resetModalState();
+  };
+  const [processingPlan, setProcessingPlan] = useState<string | null>(null);
+  const handleCheckout = async (planType: string) => {
+    if (planType === 'starter') {
+      // Free plan - just sign up
+      handleStartNow();
+      return;
+    }
+  
+    if (!user) {
+      // User not logged in - show sign in modal first
+      setAuthModalOpen(true);
+      setIsSignUp(false);
+      return;
+    }
+  
+    setProcessingPlan(planType);
+    try {
+      const response = await fetch(`https://tgeazxxujp.ap-south-1.awsapprunner.com/api/payment/create-checkout-session`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ plan_type: planType })
+      });
+  
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create checkout session');
+      }
+  
+      // Redirect to Stripe Checkout
+      window.location.href = data.checkout_url;
+    } catch (error: any) {
+      console.error('Checkout error:', error);
+      setError(error.message || 'Failed to start checkout process');
+    } finally {
+      setProcessingPlan(null);
+    }
   };
 
   const resetModalState = () => {
@@ -875,26 +917,34 @@ const LandingPage: React.FC = () => {
                     </List>
 
                     <Button
-                      variant={plan.popular ? "contained" : "outlined"}
-                      size="large"
-                      fullWidth
-                      sx={{
-                        py: 1.5,
-                        fontSize: '1rem',
-                        fontWeight: 'bold',
-                        backgroundColor: plan.popular ? '#90caf9' : 'transparent',
-                        borderColor: '#90caf9',
-                        color: plan.popular ? '#0a0a0a' : '#90caf9',
-                        '&:hover': {
-                          backgroundColor: plan.popular ? '#64b5f6' : 'rgba(144, 202, 249, 0.1)',
-                          borderColor: '#64b5f6',
-                          transform: 'translateY(-2px)',
-                        }
-                      }}
-                      onClick={plan.name === 'Starter' ? handleStartNow : undefined}
-                    >
-                      {plan.buttonText}
-                    </Button>
+  variant={plan.popular ? "contained" : "outlined"}
+  size="large"
+  fullWidth
+  onClick={() => handleCheckout(plan.name.toLowerCase())}
+  disabled={processingPlan !== null}
+  sx={{
+    py: 1.5,
+    fontSize: '1rem',
+    fontWeight: 'bold',
+    backgroundColor: plan.popular ? '#90caf9' : 'transparent',
+    borderColor: '#90caf9',
+    color: plan.popular ? '#0a0a0a' : '#90caf9',
+    '&:hover': {
+      backgroundColor: plan.popular ? '#64b5f6' : 'rgba(144, 202, 249, 0.1)',
+      borderColor: '#64b5f6',
+      transform: 'translateY(-2px)',
+    },
+    '&:disabled': {
+      opacity: 0.6,
+    }
+  }}
+>
+  {processingPlan === plan.name.toLowerCase() ? (
+    <CircularProgress size={20} sx={{ color: plan.popular ? '#0a0a0a' : '#90caf9' }} />
+  ) : (
+    plan.buttonText
+  )}
+</Button>
                   </CardContent>
                 </Card>
               </Grid>
