@@ -106,11 +106,16 @@ const LandingPage: React.FC = () => {
   const apiUrl = process.env.REACT_APP_API_URL || 'https://tgeazxxujp.ap-south-1.awsapprunner.com';
 
   const handleStartNow = () => {
-    setAuthModalOpen(true);
-    setIsSignUp(true);
-    resetModalState();
+    if (user && !requiresVerification) {
+      // User is logged in and verified - go to dashboard
+      navigate('/dashboard');
+    } else {
+      // User not logged in or needs verification - show signup modal
+      setAuthModalOpen(true);
+      setIsSignUp(true);
+      resetModalState();
+    }
   };
-
   const handleSignIn = () => {
     setAuthModalOpen(true);
     setIsSignUp(false);
