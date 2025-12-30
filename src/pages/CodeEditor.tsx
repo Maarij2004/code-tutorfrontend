@@ -217,17 +217,22 @@ const CodeEditor: React.FC = () => {
     dispatch(setCurrentCode(value || ''));
   };
 
-  const handleLanguageChange = (newLanguage: string) => {
-    dispatch(setLanguage(newLanguage));
-    dispatch(clearExecutionResult());
+// In CodeEditor.tsx - modified handleLanguageChange
+const handleLanguageChange = (newLanguage: string) => {
+  dispatch(setLanguage(newLanguage));
+  dispatch(clearExecutionResult());
 
-    // If currentCode is empty or still a template, update it with the new language template
-    const currentTemplate = getLanguageTemplate(language);
-    if (!currentCode || currentCode === currentTemplate) {
-      const newTemplate = getLanguageTemplate(newLanguage);
-      dispatch(setCurrentCode(newTemplate));
-    }
-  };
+  // Reset to template if code came from tutorial or is a template
+  const isFromTutorial = localStorage.getItem('codeFromTutorial') === 'true';
+  const currentTemplate = getLanguageTemplate(language);
+  const isCurrentCodeTemplate = currentCode === currentTemplate;
+
+  if (isFromTutorial || isCurrentCodeTemplate) {
+    const newTemplate = getLanguageTemplate(newLanguage);
+    dispatch(setCurrentCode(newTemplate));
+    localStorage.removeItem('codeFromTutorial'); // Clear the flag
+  }
+};
 
   const handleCopyToClipboard = async (text: string) => {
     try {
@@ -590,8 +595,11 @@ hello();`}
                     : language === 'flask' || language === 'fastapi'
                     ? 'python'
                     : language === 'roblox'
+                    ? 'java'
+                    : language === 'java'
                     ? 'javascript'
                     : language
+                    
                 }
                 value={currentCode || getLanguageTemplate(language)}
                 onChange={handleCodeChange}

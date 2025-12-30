@@ -3887,6 +3887,7 @@ console.log(localStorage.getItem("homework"));`,
             // Map React to JavaScript for the code editor, keep other languages as-is
             const editorLanguage = selectedLanguage === 'react' ? 'javascript' : selectedLanguage;
             dispatch(setLanguage(editorLanguage));
+            localStorage.setItem('codeFromTutorial', 'true');
           }
           
           navigate('/dashboard/editor');
