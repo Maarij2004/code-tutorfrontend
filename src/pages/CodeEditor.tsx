@@ -590,6 +590,8 @@ hello();`}
                     : language === 'flask' || language === 'fastapi'
                     ? 'python'
                     : language === 'roblox'
+                    ? 'java'
+                    : language === 'java'
                     ? 'javascript'
                     : language
                 }
