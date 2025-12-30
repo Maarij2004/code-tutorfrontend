@@ -47,6 +47,7 @@ const languages = [
   { value: 'html', label: 'HTML + CSS', extension: 'html' },
   { value: 'python', label: 'Python', extension: 'py' },
   { value: 'cpp', label: 'C++', extension: 'cpp' },
+  { value: 'java', label: 'Java', extension: 'java' },
   { value: 'javascript', label: 'JavaScript', extension: 'js' },
   { value: 'nodejs', label: 'Node.js Backend', extension: 'js' },
   { value: 'express', label: 'Express.js', extension: 'js' },
@@ -267,7 +268,24 @@ server.listen(0, () => {
 });
 
 // failsafe
-setTimeout(() => process.exit(0), 3000);`,
+setTimeout(() => process.exit(0), 3000);`,      java: `import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        // Create scanner for input
+        Scanner scanner = new Scanner(System.in);
+        
+        // Read input if available
+        System.out.println("Hello, Java!");
+        
+        // Example: Read a number and add 1
+        // int number = scanner.nextInt();
+        // System.out.println("Result: " + (number + 1));
+        
+        // Close scanner
+        scanner.close();
+    }
+}`,
       express: `// Express.js style server using built-in http module
 // Note: Express is not available in sandbox, using http module instead
 const http = require('http');
@@ -363,12 +381,7 @@ def hello():
 
 if __name__ == "__main__":
     hello()`,
-      java: `// Write your Java code here
-public class Main {
-    public static void main(String[] args) {
-        System.out.println("Hello, World!");
-    }
-}`,
+     
       cpp: `// Write your C++ code here
 #include <iostream>
 

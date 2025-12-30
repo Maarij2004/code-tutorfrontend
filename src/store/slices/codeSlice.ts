@@ -1,6 +1,32 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import api from '../../services/api';
 
+// Storage keys for persistence
+const STORAGE_KEYS = {
+  CURRENT_CODE: 'codeTutor_currentCode',
+  LANGUAGE: 'codeTutor_language',
+  THEME: 'codeTutor_theme',
+  FONT_SIZE: 'codeTutor_fontSize',
+};
+
+// Helper functions for localStorage
+const loadFromStorage = (key: string, defaultValue: any) => {
+  try {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : defaultValue;
+  } catch {
+    return defaultValue;
+  }
+};
+
+const saveToStorage = (key: string, value: any) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (error) {
+    console.warn('Failed to save to localStorage:', error);
+  }
+};
+
 interface CodeExecutionResult {
   output: string;
   error?: string;
@@ -52,10 +78,10 @@ interface CodeState {
 }
 
 const initialState: CodeState = {
-  currentCode: '',
-  language: 'javascript',
-  theme: 'vs-dark',
-  fontSize: 14,
+  currentCode: loadFromStorage(STORAGE_KEYS.CURRENT_CODE, ''),
+  language: loadFromStorage(STORAGE_KEYS.LANGUAGE, 'javascript'),
+  theme: loadFromStorage(STORAGE_KEYS.THEME, 'vs-dark'),
+  fontSize: loadFromStorage(STORAGE_KEYS.FONT_SIZE, 14),
   isExecuting: false,
   executionResult: null,
   aiAnalysis: null,
@@ -107,15 +133,19 @@ const codeSlice = createSlice({
   reducers: {
     setCurrentCode: (state, action: PayloadAction<string>) => {
       state.currentCode = action.payload;
+      saveToStorage(STORAGE_KEYS.CURRENT_CODE, action.payload);
     },
     setLanguage: (state, action: PayloadAction<string>) => {
       state.language = action.payload;
+      saveToStorage(STORAGE_KEYS.LANGUAGE, action.payload);
     },
     setTheme: (state, action: PayloadAction<string>) => {
       state.theme = action.payload;
+      saveToStorage(STORAGE_KEYS.THEME, action.payload);
     },
     setFontSize: (state, action: PayloadAction<number>) => {
       state.fontSize = action.payload;
+      saveToStorage(STORAGE_KEYS.FONT_SIZE, action.payload);
     },
     setCurrentChallenge: (state, action: PayloadAction<Challenge | null>) => {
       state.currentChallenge = action.payload;

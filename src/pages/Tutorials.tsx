@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { setCurrentCode } from '../store/slices/codeSlice'; // Add setCurrentCode
+// import { setCurrentCode } from '../store/slices/codeSlice'; // Add setCurrentCode
+import { setCurrentCode, setLanguage } from '../store/slices/codeSlice'; // Add
 // ... existing imports ...
 import {
   Grid,
@@ -60,15 +61,47 @@ const Tutorials: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { progress } = useSelector((state: RootState) => state.user);
+  const [selectedLanguage, setSelectedLanguageState] = useState(() => {
+    try {
+      const saved = localStorage.getItem('tutorial_selectedLanguage');
+      return saved ? JSON.parse(saved) : 'javascript';
+    } catch {
+      return 'javascript';
+    }
+  });
 
-  const [selectedLanguage, setSelectedLanguage] = useState('javascript');
   const [selectedTutorial, setSelectedTutorial] = useState<any>(null);
   const [tutorialDialog, setTutorialDialog] = useState(false);
   const [celebrationOpen, setCelebrationOpen] = useState(false);
   const [completedTutorial, setCompletedTutorial] = useState<any>(null);
   const [levelUp, setLevelUp] = useState(false);
-  const [learningMode, setLearningMode] = useState<'beginner' | 'medium'>('beginner');
+  const [learningMode, setLearningMode] = useState<'beginner' | 'medium'>(() => {
+    try {
+      const saved = localStorage.getItem('tutorial_learningMode');
+      return saved ? JSON.parse(saved) : 'beginner';
+    } catch {
+      return 'beginner';
+    }
+  });
+  // Custom setter for selectedLanguage that also saves to localStorage
+  const setSelectedLanguage = (language: string) => {
+    setSelectedLanguageState(language);
+    try {
+      localStorage.setItem('tutorial_selectedLanguage', JSON.stringify(language));
+    } catch (error) {
+      console.warn('Failed to save tutorial language to localStorage:', error);
+    }
+  };
 
+  // Custom setter for learningMode that also saves to localStorage
+  const setLearningModeWithPersistence = (mode: 'beginner' | 'medium') => {
+    setLearningMode(mode);
+    try {
+      localStorage.setItem('tutorial_learningMode', JSON.stringify(mode));
+    } catch (error) {
+      console.warn('Failed to save learning mode to localStorage:', error);
+    }
+  };
   useEffect(() => {
     dispatch(fetchUserProgress());
   }, [dispatch]);
@@ -3632,10 +3665,10 @@ console.log(localStorage.getItem("homework"));`,
           }}
         >
           <ToggleButton value="beginner" aria-label="beginner mode">
-            👶 Kids
+            👶 Junior
           </ToggleButton>
           <ToggleButton value="medium" aria-label="medium mode">
-            👨‍💼 Adults
+            👨‍💼 Senior
           </ToggleButton>
         </ToggleButtonGroup>
 
@@ -3851,6 +3884,9 @@ console.log(localStorage.getItem("homework"));`,
               .join('\n\n// Next Example:\n');
             
             dispatch(setCurrentCode(tutorialCode));
+            // Map React to JavaScript for the code editor, keep other languages as-is
+            const editorLanguage = selectedLanguage === 'react' ? 'javascript' : selectedLanguage;
+            dispatch(setLanguage(editorLanguage));
           }
           
           navigate('/dashboard/editor');
