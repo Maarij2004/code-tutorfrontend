@@ -332,7 +332,7 @@ useEffect(() => {
   return (
     <Box sx={{ height: 'calc(600px + 200px)', display: 'flex', flexDirection: 'column' }}>
       <Typography variant="h4" gutterBottom sx={{ mb: 3, fontWeight: 'bold' }}>
-        Ask Your Code Tutor
+        Ask Your Career Tracked
       </Typography>
 
       {/* Language Selector */}
@@ -422,7 +422,7 @@ useEffect(() => {
                 <ListItemText
                   primary={
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                      {message.sender === 'user' ? 'You' : 'Code Tutor'} • {message.timestamp.toLocaleTimeString()}
+                      {message.sender === 'user' ? 'You' : 'Career Tracked'} • {message.timestamp.toLocaleTimeString()}
                     </Typography>
                   }
                   secondary={
@@ -443,7 +443,7 @@ useEffect(() => {
                 <ListItemText
                   primary={
                     <Typography variant="body2" color="text.secondary">
-                      Code Tutor • Thinking...
+                      Career Tracked
                     </Typography>
                   }
                   secondary={

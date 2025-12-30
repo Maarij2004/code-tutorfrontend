@@ -477,7 +477,7 @@ const LandingPage: React.FC = () => {
                 color: 'primary.main',
                 textShadow: '0 0 10px rgba(144, 202, 249, 0.5)'
               }}>
-                Code Tutor AI
+                Career Tracked
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
@@ -636,7 +636,7 @@ const LandingPage: React.FC = () => {
           color: '#90caf9',
           animation: 'fadeInUp 0.8s ease-out'
         }}>
-          Why Choose Code Tutor AI?
+          Why Choose Career Tracked?
         </Typography>
         <Grid container spacing={4}>
           {features.map((feature, index) => (
@@ -1026,7 +1026,7 @@ const LandingPage: React.FC = () => {
                 animation: 'glow 2s ease-in-out infinite alternate'
               }} />
               <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                Code Tutor AI
+              Career Tracked
               </Typography>
             </Box>
             <Typography variant="body2" sx={{ opacity: 0.8, maxWidth: 600, mx: 'auto' }}>
@@ -1039,7 +1039,7 @@ const LandingPage: React.FC = () => {
             opacity: 0.7,
             animation: 'fadeInUp 0.8s ease-out 0.4s both'
           }}>
-            © 2025 Code Tutor AI. All rights reserved. Built with ❤️ for developers worldwide.
+            © 2025 Career Tracked. All rights reserved.
           </Typography>
         </Container>
       </Box>
@@ -1079,7 +1079,7 @@ const LandingPage: React.FC = () => {
             <Typography variant="h5" sx={{ fontWeight: 'bold', color: 'white' }}>
               {isForgotPassword
                 ? (isOtpSent ? (isOtpVerified ? 'Reset Password' : 'Verify OTP') : 'Reset Password')
-                : isSignUp ? 'Join Code Tutor AI' : 'Welcome Back'}
+                : isSignUp ? 'Join Career Tracked' : 'Welcome Back'}
             </Typography>
             <Typography variant="body2" sx={{ color: 'rgba(176,176,176,0.8)', mt: 1 }}>
               {isForgotPassword

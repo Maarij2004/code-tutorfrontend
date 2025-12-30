@@ -85,7 +85,7 @@ const Login: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
             <Code sx={{ fontSize: 48, color: 'primary.main', mr: 1 }} />
             <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-              Code Tutor AI
+            Career Tracked
             </Typography>
           </Box>
           <Typography variant="h6" color="text.secondary">

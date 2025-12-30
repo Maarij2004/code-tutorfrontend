@@ -123,7 +123,7 @@ const Layout: React.FC = () => {
           }}
           onClick={handleLogoClick}
         >
-          Code Tutor AI
+          Career Tracked
         </Typography>
       </Toolbar>
       <List>
